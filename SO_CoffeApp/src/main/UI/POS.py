@@ -2,9 +2,11 @@ from pathlib import Path
 from tkinter import *
 from tkinter import Scrollbar
 from tkinter import Menubutton
+from tkinter import ttk
 from tkinter.ttk import Combobox
 import pyodbc
-
+from PIL import Image, ImageTk
+import tkinter as tk
 # Configuration main window--------------------------------------
 mw = Tk()
 mw.geometry("1024x733")
@@ -34,6 +36,19 @@ products_frame.place(x=30, y=60, width=700, height=450)
 checkout_frame.place(x=745, y=60, width=260, height=450)
 bar_frame.place(x=0, y=0, relwidth=1, height=30)
 
+#Logic CancelOrder_Button-------------------------------------
+#
+#
+#
+#
+
+#Logic HoldOrder_Button
+#
+#
+#
+#
+#
+
 #Buttons and Labels main window
 CancelOrder_Button = Button(text="Cancelar Orden", font=("Katibeh",15), fg="red", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="red")
 CancelOrder_Button.config(bg=mw.cget('bg'))
@@ -54,23 +69,82 @@ Atributtes_Label = Label(checkout_frame, text="Nombre            Cantidad       
 Atributtes_Label.place(x=260, y=30, anchor="e", relwidth=1, height=15)
 
 #Logica de los command para que habra resectivas ventanas cada opcion(abrir las ventanas respectivas a cada gestionar)---------------------------------------
-def managment_sales():
-    mw.destroy()
-    #from Sales_Management import Sales_Management
-    #Sales_Management()
-
-# Función para cerrar sesión
+# arreglar para poder navegar entre ventanas
 def logout():
     mw.destroy()
     from LogIn import logIn
     logIn()
 
+def managEmployees():
+    from Employees import Employees
+    Employees()
 
-#connection bd
+def managProducts():
+    from Products import Products 
+    Products()
+#Option menu bar frame----------------------------------------------------------
+
+# Load the image using PIL
+MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
+# Create a label to display the background image
+MenuButton_barFrame = Menubutton(bar_frame, image=MB_image ,bg="#CE7710", width=30, height=30)
+MenuButton_barFrame.place(x=0, y=0)
+MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
+MenuButton_barFrame.menu.add_command(label="Configurar pa que salga el usuario", foreground="black", font=("New Times Roman", 12))
+MenuButton_barFrame.menu.add_separator()
+MenuButton_barFrame.menu.add_command(label="Gestion de ventas", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_command(label="Gestion de compras", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_command(label="Gestion de empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
+MenuButton_barFrame.menu.add_command(label="Gestion de proveedores", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_command(label="Gestion de productos", foreground="white", font=("New Times Roman", 12), command= managProducts)
+MenuButton_barFrame.menu.add_command(label="Gestion de usuarios", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_separator()
+MenuButton_barFrame.menu.add_command(label="Cerrar Sesion", foreground="black", font=("New Times Roman", 12), command=logout)
+MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
+
+#Bar_list search product------------------------------------------------
+# Variables (Arreglar para que funcione)
+product_list = []  # List to store retrieved products
+current_selection = StringVar()  # String variable to hold the selected product
+
+def get_products_from_db(search_text):
+  conn = get_db_connection()
+  if not conn:
+    return
+
+  products = []
+  cursor = conn.cursor()
+  try:
+    cursor.execute("SELECT nombre FROM productos WHERE nombre LIKE ?", ("%"+search_text+"%",))
+    if cursor.rowcount > 0:
+      for row in cursor:
+        products.append(row[1])
+    else:
+      print("No products found for search text:", search_text)
+  except pyodbc.Error as e:
+    print("Database error:", e)
+  finally:
+    if conn:
+      conn.close()
+
+  return products
+
+def update_product_list(event):
+  search_text = product_combobox.get()
+  product_list.clear()  # Clear previous list
+  product_list.extend(get_products_from_db(search_text))
+  product_combobox.set_values(*product_list)  # Update combobox values
+
+product_combobox = ttk.Combobox(mw, textvariable=current_selection, width=80)
+product_combobox.bind("<KeyRelease>", update_product_list)  # Bind update function to key release
+product_combobox.place(x=30, y=33)  
+
+
+#connection bd---------------------------------------------------------------------------------------------------------------------
 def get_db_connection():
     conn = pyodbc.connect('DRIVER={SQL Server};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123;')
     return conn
-
+#Method get products to show in scroll_bar_frame
 def get_active_products():
     conn = get_db_connection()  
     if not conn:
@@ -139,6 +213,7 @@ create_product_buttons(products, inner_frame)
 
 
 #Configure Combobox----------------------------------------------------------------------
+#Revisar y hacer que jale
 employee_combobox = Combobox(mw)
 employee_combobox.place(x=745, y=35)
 
