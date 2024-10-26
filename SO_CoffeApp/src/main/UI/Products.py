@@ -56,6 +56,7 @@ def Add_ProductWindow():
         nombre = Name_Box.get()
         descripcion = Description_Box.get()
         costo = float(Precio_Box.get())
+        existencia = Existence_Box.get()
 
         # Agregar la información a la base de datos utilizando un procedimiento almacenado
         try:
@@ -92,6 +93,11 @@ def Add_ProductWindow():
     Precio_Label.place(x=30, y=145)
     Precio_Box = Entry(ap, width=5, bg="lightgray" )
     Precio_Box.place(x=115, y=145)
+    
+    Existence_Label = Label(ap, text="Existencia $", fg="black", bg="white", font=("Arial Black", 9))
+    Existence_Label.place(x=30, y=145)
+    Existence_Box = Entry(ap, width=5, bg="lightgray" )
+    Existence_Box.place(x=115, y=145)
 
     Aceptar_Button = Button(ap, text="Aceptar", bg="green", fg="black", font=("Arial Black", 9), command=Aceptar_ButtonAction)
     Aceptar_Button.place(x=300, y=70)

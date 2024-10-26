@@ -61,13 +61,6 @@ HoldOrder_Button.place(x=440, y=550, anchor="center", width=200)
 Payment_Label = Label(text="configurar esta madre",font=("Katibeh", 10), bg="#309B15", fg="white")#hacer que el texto sea lo que arroje el total
 Payment_Label.place(x=875, y=540, anchor="center", width=260, height=35)
 
-#Customize Checkout_frame----------------------------------------
-Checkout_Label = Label(checkout_frame, text="Cuenta", font=("Arial Black", 10), bg="white", fg="black")
-Checkout_Label.place(x=135, y=10, anchor="center", relwidth=1, height=10)
-
-Atributtes_Label = Label(checkout_frame, text="Nombre            Cantidad             Precio", font=("Arial", 10), bg="#d4d9d6", fg="black")
-Atributtes_Label.place(x=260, y=30, anchor="e", relwidth=1, height=15)
-
 #Logica de los command para que habra resectivas ventanas cada opcion(abrir las ventanas respectivas a cada gestionar)---------------------------------------
 # arreglar para poder navegar entre ventanas
 def logout():
@@ -82,6 +75,10 @@ def managEmployees():
 def managProducts():
     from Products import Products 
     Products()
+
+def  managSupplier():
+    from Suppliers import Suppliers 
+    Suppliers()
 #Option menu bar frame----------------------------------------------------------
 
 # Load the image using PIL
@@ -95,7 +92,7 @@ MenuButton_barFrame.menu.add_separator()
 MenuButton_barFrame.menu.add_command(label="Gestion de ventas", foreground="white", font=("New Times Roman", 12))#
 MenuButton_barFrame.menu.add_command(label="Gestion de compras", foreground="white", font=("New Times Roman", 12))#
 MenuButton_barFrame.menu.add_command(label="Gestion de empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
-MenuButton_barFrame.menu.add_command(label="Gestion de proveedores", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_command(label="Gestion de proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
 MenuButton_barFrame.menu.add_command(label="Gestion de productos", foreground="white", font=("New Times Roman", 12), command= managProducts)
 MenuButton_barFrame.menu.add_command(label="Gestion de usuarios", foreground="white", font=("New Times Roman", 12))#
 MenuButton_barFrame.menu.add_separator()
@@ -210,6 +207,53 @@ Canvas_scrollbar.bind("<Configure>", configure_scrollregion)
 # Get active products and create buttons
 products = get_active_products()  # Call get_active_products before button creation
 create_product_buttons(products, inner_frame)
+
+
+#Customize Checkout_frame----------------------------------------
+Checkout_Label = Label(checkout_frame, text="Cuenta", font=("Arial Black", 10), bg="white", fg="black")
+Checkout_Label.place(x=135, y=10, anchor="center", relwidth=1, height=10)
+
+Atributtes_Label = Label(checkout_frame, text="Nombre            Cantidad             Precio", font=("Arial", 10), bg="#d4d9d6", fg="black")
+Atributtes_Label.place(x=260, y=30, anchor="e", relwidth=1, height=15)
+
+selected_products = []
+total_price = 0.0
+
+# Frame para mostrar los productos seleccionados en el checkout
+checkout_list_frame = Frame(checkout_frame, bg="white")
+checkout_list_frame.place(x=5, y=50, width=250, height=300)
+
+# Label para mostrar el total
+total_label = Label(checkout_frame, text="Total: $0.00", font=("Arial", 12), bg="white", fg="black")
+total_label.place(x=5, y=360)
+
+# Función que se ejecuta cuando se selecciona un producto
+def on_product_click(product_name, product_description, product_price):
+    global total_price
+
+    # Añadir el producto a la lista de seleccionados
+    selected_products.append({"name": product_name, "price": product_price})
+
+    # Actualizar la lista visualmente
+    update_checkout_list()
+
+    # Actualizar el total
+    total_price += product_price
+    total_label.config(text=f"Total: ${total_price:.2f}")
+
+# Función para actualizar la lista de productos seleccionados visualmente
+def update_checkout_list():
+    # Limpiar el frame de checkout
+    for widget in checkout_list_frame.winfo_children():
+        widget.destroy()
+
+    # Mostrar cada producto seleccionado en el frame
+    for index, product in enumerate(selected_products):
+        product_label = Label(checkout_list_frame, text=f"{product['name']} - ${product['price']:.2f}", font=("Arial", 10), bg="white", fg="black")
+        product_label.pack(anchor="w")
+
+
+
 
 
 #Configure Combobox----------------------------------------------------------------------
