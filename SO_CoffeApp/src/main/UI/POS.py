@@ -1,3 +1,5 @@
+from decimal import Decimal
+from functools import partial
 from pathlib import Path
 from tkinter import *
 from tkinter import Scrollbar
@@ -9,9 +11,9 @@ from PIL import Image, ImageTk
 import tkinter as tk
 # Configuration main window--------------------------------------
 mw = Tk()
-mw.geometry("1024x733")
+mw.geometry("1150x733")
 mw.minsize(700, 500)
-mw.maxsize(1024, 580)
+mw.maxsize(1224, 580)
 mw.configure(bg="#C9C9C9")
 mw.title("Punto de Venta")
 # Icon --------------------------
@@ -33,7 +35,7 @@ checkout_frame = Frame(mw, bg="white")
 
 #Customize Frame
 products_frame.place(x=30, y=60, width=700, height=450)
-checkout_frame.place(x=745, y=60, width=260, height=450)
+checkout_frame.place(x=745, y=60, width=370, height=450)
 bar_frame.place(x=0, y=0, relwidth=1, height=30)
 
 #Logic CancelOrder_Button-------------------------------------
@@ -57,9 +59,6 @@ CancelOrder_Button.place(x=220, y=550, anchor="center", width=200)
 HoldOrder_Button = Button(text="Completar Orden", font=("Katibeh",15), fg="green", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="green")
 HoldOrder_Button.config(bg=mw.cget('bg'))
 HoldOrder_Button.place(x=440, y=550, anchor="center", width=200)
-
-Payment_Label = Label(text="configurar esta madre",font=("Katibeh", 10), bg="#309B15", fg="white")#hacer que el texto sea lo que arroje el total
-Payment_Label.place(x=875, y=540, anchor="center", width=260, height=35)
 
 #Logica de los command para que habra resectivas ventanas cada opcion(abrir las ventanas respectivas a cada gestionar)---------------------------------------
 # arreglar para poder navegar entre ventanas
@@ -172,7 +171,7 @@ def create_product_buttons(products, inner_frame):
         button = Button(
             inner_frame,
             text=f"{product_name} \n {product_description} \n ${product_price:.2f}",
-            command=lambda name=product_name, price=product_price, description=product_description: on_product_click(name, description, price),
+            command=partial(on_product_click, product_name, product_description, product_price),
             width=20  # Set button width
         )
 
@@ -188,6 +187,47 @@ def create_product_buttons(products, inner_frame):
             current_row += 1
 def on_product_click(product_name, product_description, product_price):
     print(f"Producto seleccionado: {product_name} - Precio: ${product_price:.2f} - Descripción: {product_description}")  # Replace with your desired action
+
+    #Agregar cantidad del producto 
+    popup = Toplevel()
+    popup.title("Cantidad")
+    popup.geometry("300x150")
+
+    Label_Cantidad = Label(popup, text="Cantidad") 
+    Label_Cantidad.pack(pady=5)
+
+    entry_cantidad = Entry(popup)
+    entry_cantidad.pack(pady=5)
+    entry_cantidad.insert(0, "1")  # Valor predeterminado para cantidad
+    
+
+    # Confirmar selección de cantidad
+    def confirmar_seleccion():
+        cantidad = entry_cantidad.get()
+        try:
+            cantidad = int(cantidad)
+        except ValueError:
+            print("Por favor, ingresa una cantidad válida.")
+            return
+        
+        importe = Decimal(product_price) * Decimal(cantidad)  # Asegura que importe sea Decimal
+        selected_products.append({
+            "name": product_name,
+            "price": float(product_price),  # Convertir a float para mantener consistencia
+            "cantidad": cantidad,
+            "importe": float(importe)  # Convertir importe a float para evitar errores
+        })
+
+        # Actualizar el total usando floats
+        global total_price
+        total_price += float(importe)
+        total_label.config(text=f"Total: ${total_price:.2f}")
+
+        popup.destroy()
+        update_checkout_list()
+    btn_confirm = Button(popup, text="Añadir al carrito", command=confirmar_seleccion)
+    btn_confirm.pack(pady=10)
+
 
 #ScrollBar products_frame  --------------------------------------------------- 
 Canvas_scrollbar = Canvas(products_frame)
@@ -210,22 +250,22 @@ create_product_buttons(products, inner_frame)
 
 
 #Customize Checkout_frame----------------------------------------
-Checkout_Label = Label(checkout_frame, text="Cuenta", font=("Arial Black", 10), bg="white", fg="black")
+Checkout_Label = Label(checkout_frame, text="Cuenta", font=("Playfair Display", 10), bg="white", fg="black", width=300)
 Checkout_Label.place(x=135, y=10, anchor="center", relwidth=1, height=10)
 
-Atributtes_Label = Label(checkout_frame, text="Nombre            Cantidad             Precio", font=("Arial", 10), bg="#d4d9d6", fg="black")
-Atributtes_Label.place(x=260, y=30, anchor="e", relwidth=1, height=15)
+Atributtes_Label = Label(checkout_frame, text="      Nombre            Precio   QYT   Importe", font=("Arial", 8), bg="#d4d9d6", fg="black")
+Atributtes_Label.place(x=310, y=30, anchor="e", width=420, height=15)
 
 selected_products = []
 total_price = 0.0
 
-# Frame para mostrar los productos seleccionados en el checkout
+# Frame para mostrar los productos seleccionados en el checkout--------------------
 checkout_list_frame = Frame(checkout_frame, bg="white")
-checkout_list_frame.place(x=5, y=50, width=250, height=300)
+checkout_list_frame.place(x=15, y=50, width=350, height=300)
 
 # Label para mostrar el total
 total_label = Label(checkout_frame, text="Total: $0.00", font=("Arial", 12), bg="white", fg="black")
-total_label.place(x=5, y=360)
+total_label.place(x=5, y=425)
 
 # Función que se ejecuta cuando se selecciona un producto
 def on_product_click(product_name, product_description, product_price):
@@ -243,48 +283,64 @@ def on_product_click(product_name, product_description, product_price):
 
 # Función para actualizar la lista de productos seleccionados visualmente
 def update_checkout_list():
-    # Limpiar el frame de checkout
+    global total_price
+    total_price = sum(product['importe'] for product in selected_products)  # Recalcular total
     for widget in checkout_list_frame.winfo_children():
         widget.destroy()
 
-    # Mostrar cada producto seleccionado en el frame
     for index, product in enumerate(selected_products):
-        product_label = Label(checkout_list_frame, text=f"{product['name']} - ${product['price']:.2f}", font=("Arial", 10), bg="white", fg="black")
-        product_label.pack(anchor="w")
+        product_label = Label(
+            checkout_list_frame,
+            text=f"{product['name']:15} ${product['price']:.2f}   {product['cantidad']}   ${product['importe']:.2f}",
+            font=("Arial", 10), bg="white", fg="black"
+        )
+        product_label.grid(row=index, column=0, sticky="w")
+
+        modify_button = Button(checkout_list_frame, text="Modificar", command=lambda idx=index: modify_quantity(idx))
+        modify_button.grid(row=index, column=1, padx=5, pady=3)
+        
+        delete_button = Button(checkout_list_frame, text="Eliminar", command=lambda idx=index: delete_product(idx))
+        delete_button.grid(row=index, column=2, padx=5, pady=3)
+
+    total_label.config(text=f"Total: ${total_price:.2f}")
 
 
+# Función para modificar la cantidad de un producto
+def modify_quantity(index):
+    popup = Toplevel()
+    popup.title("Modificar cantidad")
+    popup.geometry("300x150")
 
+    Label(popup, text="Nueva cantidad:").pack(pady=5)
+    entry_cantidad = Entry(popup)
+    entry_cantidad.pack(pady=5)
+    entry_cantidad.insert(0, str(selected_products[index]["cantidad"]))
 
+    def confirmar_cambio():
+        try:
+            nueva_cantidad = int(entry_cantidad.get())
+            if nueva_cantidad > 0:
+                selected_products[index]["cantidad"] = nueva_cantidad
+                selected_products[index]["importe"] = selected_products[index]["price"] * nueva_cantidad
+                update_checkout_list()
+            popup.destroy()
+        except ValueError:
+            print("Por favor, ingrese un número válido.")
+
+    confirmar_button = Button(popup, text="Confirmar", command=confirmar_cambio)
+    confirmar_button.pack(pady=10)
+
+# Función para eliminar un producto
+def delete_product(index):
+    del selected_products[index]
+    update_checkout_list()
 
 #Configure Combobox----------------------------------------------------------------------
-#Revisar y hacer que jale
-employee_combobox = Combobox(mw)
-employee_combobox.place(x=745, y=35)
+employee_label = Label(mw, text="Empleado", font=("Arial Black", 10), bg="#C9C9C9", fg="black")
+employee_label.place(x=745, y=35)
+employee_combobox = Entry(mw)
+employee_combobox.place(x=830, y=35)
 
-def get_mostrar_empleados_activos():
-    conn = get_db_connection()  
-    if not conn:
-        return []
-
-    employees = []
-    cursor = conn.cursor()
-    try:
-        cursor.execute("EXEC mostrar_empleados_activos")  # Call the stored procedure
-        for row in cursor:
-            products.append({row[1]})  # Assuming the procedure returns name and price
-    finally:
-        if conn:
-            conn.close()
-
-    return employees
-
-
-def configure_combobox():
-    """Fetches employee names and populates the combobox."""
-    employee_names = get_mostrar_empleados_activos()
-   # employee_combobox.set_values(*employee_names)  # Set combobox values using unpacking
-
-configure_combobox()
 
 #END----------------------------
 mw.mainloop()
