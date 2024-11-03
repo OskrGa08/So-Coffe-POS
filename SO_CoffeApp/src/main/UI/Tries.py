@@ -1,7 +1,6 @@
 import tkinter as tk
 from tkinter import messagebox
 import pyodbc
-import datetime
 
 # Crear una ventana de la aplicación
 root = tk.Tk()
@@ -13,7 +12,7 @@ carrito = []
 # Conexión a la base de datos
 def obtener_conexion():
     return pyodbc.connect(
-        'DRIVER={SQL Server};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123;')
+        'DRIVER={SQL Server};SERVER=localhost;DATABASE=Socoffe;UID=sa;PWD=12345')
 
 # Función para obtener los productos de la base de datos
 def obtener_productos():
@@ -62,10 +61,14 @@ def confirmar_venta():
         return
     try:
         # Llamar a la función que guarda la venta en la base de datos
-        confirmar_venta_en_base_de_datos(id_empleado)
-        messagebox.showinfo("Venta confirmada", "La venta ha sido registrada.")
-        carrito.clear()
-        actualizar_carrito()
+        id_venta = confirmar_venta_en_base_de_datos(id_empleado)
+        
+        # Llamar al procedimiento para actualizar existencias de productos e insumos
+        if id_venta is not None:
+            actualizar_existencias(id_venta)
+            messagebox.showinfo("Venta confirmada", "La venta ha sido registrada y las existencias actualizadas.")
+            carrito.clear()
+            actualizar_carrito()
     except Exception as e:
         messagebox.showerror("Error", f"Error al confirmar la venta: {e}")
 
@@ -73,6 +76,7 @@ def confirmar_venta():
 def confirmar_venta_en_base_de_datos(id_empleado):
     conn = obtener_conexion()
     cursor = conn.cursor()
+    id_venta = None
 
     try:
         cursor.execute("BEGIN TRANSACTION")
@@ -83,24 +87,39 @@ def confirmar_venta_en_base_de_datos(id_empleado):
         # Llamar al procedimiento almacenado para insertar la venta
         cursor.execute("EXEC addVenta @id_empleado=?, @total=?", id_empleado, total_venta)
 
-        # Obtener el ID de la venta recién creada usando una alternativa a SCOPE_IDENTITY()
+        # Obtener el ID de la venta recién creada
         id_venta = cursor.execute("SELECT TOP 1 id_venta FROM ventas ORDER BY id_venta DESC").fetchval()
         if id_venta is None:
             raise Exception("No se pudo obtener el id_venta. Verifique la inserción en la tabla Ventas.")
 
         # Insertar cada producto del carrito usando el procedimiento almacenado addDetalleVenta
         for item in carrito:
-            cursor.execute("""
-                EXEC addDetalleVenta @id_venta=?, @id_producto=?, @cantidad=?, @subtotal=?
-            """, id_venta, item['id_producto'], item['cantidad'], item['subtotal'])
+            cursor.execute("EXEC addDetalleVenta @id_venta=?, @id_producto=?, @cantidad=?, @subtotal=?",
+                           id_venta, item['id_producto'], item['cantidad'], item['subtotal'])
 
         # Confirmar la transacción
         cursor.execute("COMMIT TRANSACTION")
         conn.commit()
-        print("Transacción confirmada.")
+        return id_venta
     except Exception as e:
         cursor.execute("ROLLBACK TRANSACTION")
         print(f"Error durante la transacción: {e}")
+        raise e
+    finally:
+        conn.close()
+
+# Función para actualizar existencias al confirmar la venta
+def actualizar_existencias(id_venta):
+    conn = obtener_conexion()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("EXEC registrarVentaConExistencias @id_venta=?", id_venta)
+        conn.commit()
+        print("Existencias actualizadas.")
+    except Exception as e:
+        conn.rollback()
+        print(f"Error al actualizar existencias: {e}")
         raise e
     finally:
         conn.close()

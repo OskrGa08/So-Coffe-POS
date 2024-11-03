@@ -5,23 +5,69 @@ from tkinter import ttk
 
 # Configuration main window---------------------------
 remp = Tk()
-remp.geometry("650x430")
+remp.geometry("1440x530")
 remp.minsize(400, 400)
-remp.maxsize(1500, 580)
+remp.maxsize(1600, 680)
 remp.configure(bg="white")
 remp.title("Registrar nuevo empleado")
 
+#Top Bar-----------------------------------------------
+topBar_frame = Frame(remp, bg="#CE7710")
+topBar_frame.place(x=0, y=0, relwidth=1, height=30)
+
+#Logica de los command para que habra resectivas ventanas cada opcion(abrir las ventanas respectivas a cada gestionar)---------------------------------------
+# arreglar para poder navegar entre ventanas
+def logout():
+    remp.destroy()
+    from LogIn import logIn
+    logIn()
+
+def managEmployees():
+    from Employees import Employees
+    Employees()
+
+def managProducts():
+    from Products import Products 
+    Products()
+
+def  managSupplier():
+    from Suppliers import Suppliers 
+    Suppliers()
+
+# Load the image using PIL
+MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
+# Create a label to display the background image
+MenuButton_barFrame = Menubutton(topBar_frame, image=MB_image ,bg="#CE7710", width=30, height=30)
+MenuButton_barFrame.place(x=0, y=0)
+MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
+MenuButton_barFrame.menu.add_command(label="Configurar pa que salga el usuario", foreground="black", font=("New Times Roman", 12))
+MenuButton_barFrame.menu.add_separator()
+MenuButton_barFrame.menu.add_command(label="Gestion de ventas", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_command(label="Gestion de compras", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_command(label="Gestion de empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
+MenuButton_barFrame.menu.add_command(label="Gestion de proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
+MenuButton_barFrame.menu.add_command(label="Gestion de productos", foreground="white", font=("New Times Roman", 12), command= managProducts)
+MenuButton_barFrame.menu.add_command(label="Gestion de usuarios", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_separator()
+MenuButton_barFrame.menu.add_command(label="Cerrar Sesion", foreground="black", font=("New Times Roman", 12), command=logout)
+MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
+
 
 Main_Label = Label(remp, text="EMPLEADOS", fg="black", bg="white", font=("Arial Black", 18))
-Main_Label.place(x=250, y=75)
+Main_Label.place(x=645, y=45)
 
 # Table to display products
-product_columns = ("ID Empleado", "Nombre", "Apellidos")
-product_tree = ttk.Treeview(remp, columns=product_columns, show="headings", height=5)
+employee_columns = ("ID Empleado", "Nombre", "Apellidos", "Puesto", "RFC", "Domicilio", "Telefono")
+employee_tree = ttk.Treeview(remp, columns=employee_columns, show="headings", height=5)
 
-for col in product_columns:
-    product_tree.heading(col, text=col)
-product_tree.place(x=20, y=160, height=200)
+for col in employee_columns:
+    employee_tree.heading(col, text=col)
+employee_tree.place(x=20, y=160, height=200)
+
+employee_scrollbar = Scrollbar(remp, orient="vertical", command=employee_tree.yview)
+employee_scrollbar.place(x=1402, y=162, height=195)
+employee_tree.configure(yscrollcommand=employee_scrollbar.set)
+
 
 # Connection db---------------------------------------------------------
 def get_db_connection():
@@ -37,8 +83,15 @@ def load_employees():
         # Concatenate names directly in the loop for efficiency
         for row in rows:
             full_name = f"{row[2]} {row[3]}"  # Combine all names
-            formatted_row = (row[0], row[1], full_name)
-            product_tree.insert("", "end", values=formatted_row)
+            formatted_row = (
+                row[0], 
+                row[1], 
+                full_name, 
+                row[4],
+                row[5],
+                row[6],
+                row[7])
+            employee_tree.insert("", "end", values=formatted_row)
         cursor.close()
         conn.close()
     except Exception as e:
@@ -74,7 +127,7 @@ def Add_ProductWindow():
             conn.close()
 
             # Mostrar la información obtenida en la ventana principal (rgp)
-            product_tree.insert("", "end", values=(id_empleado, nombre, apeP, apeM, puesto, rfc, domicilio, telefono))
+            employee_tree.insert("", "end", values=(id_empleado, nombre, apeP, apeM, puesto, rfc, domicilio, telefono))
             ap.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"Error al insertar el producto: {e}")
@@ -127,12 +180,12 @@ def Add_ProductWindow():
 
 # Function to open edit employee window ---------------------------------------------
 def Edit_EmployeeWindow():
-    selected_item = product_tree.selection()
+    selected_item = employee_tree.selection()
     if not selected_item:
         messagebox.showwarning("Advertencia", "Seleccione un producto para editar")
         return
 
-    item = product_tree.item(selected_item)
+    item = employee_tree.item(selected_item)
     values = item["values"]
 
     ee = Toplevel(remp)
@@ -161,7 +214,7 @@ def Edit_EmployeeWindow():
             conn.close()
 
             # Actualizar la información en la tabla
-            product_tree.item(selected_item, values=(id_empleado, nombre, apeP, apeM, puesto, rfc, domicilio, telefono))
+            employee_tree.item(selected_item, values=(id_empleado, nombre, apeP, apeM, puesto, rfc, domicilio, telefono))
             ee.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"Error al actualizar el producto: {e}")
@@ -213,7 +266,7 @@ def Edit_EmployeeWindow():
 
 #Function to delete a employee
 def Delete_Employee():
-    selected_item = product_tree.selection()
+    selected_item = employee_tree.selection()
     if not selected_item:
         messagebox.showwarning("Advertencia", "Seleccione un producto para eliminar")
         return
@@ -222,7 +275,7 @@ def Delete_Employee():
     if not confirm:
         return
 
-    item = product_tree.item(selected_item)
+    item = employee_tree.item(selected_item)
     id_empleado = item["values"][0]
 
     try:
@@ -233,20 +286,20 @@ def Delete_Employee():
         cursor.close()
         conn.close()
 
-        product_tree.delete(selected_item)
+        employee_tree.delete(selected_item)
         messagebox.showinfo("Éxito", "Producto marcado como inactivo correctamente.")
     except Exception as e:
         messagebox.showerror("Error", f"Error al marcar el producto como inactivo: {e}")
 
 #Buttons----------------------------------
 Add_Product = Button(remp, text="Agregar Empleado", fg="black", bg="#CE7710", command=Add_ProductWindow, font=("Arial Black", 9))
-Add_Product.place(x=500, y=30)
+Add_Product.place(x=250, y=120)
 
 Edit_Product = Button(remp, text="Editar Empleado", fg="black", bg="#CE7710", command=Edit_EmployeeWindow, font=("Arial Black", 9))
-Edit_Product.place(x=500, y=70)
+Edit_Product.place(x=670, y=120)
 
 Delete_Product = Button(remp, text="Eliminar Empleado", fg="black", bg="#CE7710", command=Delete_Employee, font=("Arial Black", 9))
-Delete_Product.place(x=500, y=110)
+Delete_Product.place(x=1050, y=120)
 
 
 #END--------------------------------------------------

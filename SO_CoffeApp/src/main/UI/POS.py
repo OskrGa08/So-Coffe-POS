@@ -99,7 +99,6 @@ MenuButton_barFrame.menu.add_command(label="Cerrar Sesion", foreground="black", 
 MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
 
 #Bar_list search product------------------------------------------------
-# Variables (Arreglar para que funcione)
 product_list = []  # List to store retrieved products
 current_selection = StringVar()  # String variable to hold the selected product
 
