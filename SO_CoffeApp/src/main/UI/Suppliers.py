@@ -5,18 +5,58 @@ from tkinter import ttk
 
 # Configuration main window---------------------------
 rprov = Tk()
-rprov.geometry("650x430")
+rprov.geometry("1240x530")
 rprov.minsize(400, 400)
 rprov.maxsize(1500, 580)
 rprov.configure(bg="white")
 rprov.title("Registrar nuevo Proveedor")
 
+#Top Bar-----------------------------------------------
+topBar_frame = Frame(rprov, bg="#CE7710")
+topBar_frame.place(x=0, y=0, relwidth=1, height=30)
+
+#Logica de los command para que habra resectivas ventanas cada opcion(abrir las ventanas respectivas a cada gestionar)---------------------------------------
+# arreglar para poder navegar entre ventanas
+def logout():
+    rprov.destroy()
+    from LogIn import logIn
+    logIn()
+
+def managEmployees():
+    from Employees import Employees
+    Employees()
+
+def managProducts():
+    from Products import Products 
+    Products()
+
+def  managSupplier():
+    from Suppliers import Suppliers 
+    Suppliers()
+
+# Load the image using PIL
+MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
+# Create a label to display the background image
+MenuButton_barFrame = Menubutton(topBar_frame, image=MB_image ,bg="#CE7710", width=30, height=30)
+MenuButton_barFrame.place(x=0, y=0)
+MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
+MenuButton_barFrame.menu.add_command(label="Configurar pa que salga el usuario", foreground="black", font=("New Times Roman", 12))
+MenuButton_barFrame.menu.add_separator()
+MenuButton_barFrame.menu.add_command(label="Gestion de ventas", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_command(label="Gestion de compras", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_command(label="Gestion de empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
+MenuButton_barFrame.menu.add_command(label="Gestion de proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
+MenuButton_barFrame.menu.add_command(label="Gestion de productos", foreground="white", font=("New Times Roman", 12), command= managProducts)
+MenuButton_barFrame.menu.add_command(label="Gestion de usuarios", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_separator()
+MenuButton_barFrame.menu.add_command(label="Cerrar Sesion", foreground="black", font=("New Times Roman", 12), command=logout)
+MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
 
 Main_Label = Label(rprov, text="PROVEEDOR", fg="black", bg="white", font=("Arial Black", 18))
-Main_Label.place(x=250, y=75)
+Main_Label.place(x=520, y=45)
 
 # Table to display suppliers
-product_columns = ("ID Proveedores", "Nombre", "Apellidos")
+product_columns = ("ID Proveedores", "Nombre", "Apellidos", "Telefono", "RFC", "Correo")
 product_tree = ttk.Treeview(rprov, columns=product_columns, show="headings", height=5)
 
 for col in product_columns:
@@ -207,13 +247,13 @@ def Delete_Employee():
 
 #Buttons----------------------------------
 Add_Supplier = Button(rprov, text="Agregar Proveedor", fg="black", bg="#CE7710", command=Add_ProductWindow, font=("Arial Black", 9))
-Add_Supplier.place(x=500, y=30)
+Add_Supplier.place(x=180, y=120)
 
 Edit_Supplier = Button(rprov, text="Editar Proveedor", fg="black", bg="#CE7710", command=Edit_EmployeeWindow, font=("Arial Black", 9))
-Edit_Supplier.place(x=500, y=70)
+Edit_Supplier.place(x=550, y=120)
 
 Delete_Supplier = Button(rprov, text="Eliminar Proveedor", fg="black", bg="#CE7710", command=Delete_Employee, font=("Arial Black", 9))
-Delete_Supplier.place(x=500, y=110)
+Delete_Supplier.place(x=950, y=120)
 
 
 #END--------------------------------------------------
