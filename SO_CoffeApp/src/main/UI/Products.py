@@ -7,7 +7,7 @@ from tkinter import ttk
 
 # Configuration main window---------------------------
 rgp = Tk()
-rgp.geometry("850x700")
+rgp.geometry("1040x700")
 rgp.minsize(700, 500)
 rgp.maxsize(1500, 580)
 rgp.configure(bg="white")
@@ -18,21 +18,43 @@ topBar_frame = Frame(rgp, bg="#CE7710")
 topBar_frame.place(x=0, y=0, relwidth=1, height=30)
 
 #Logica de los command para que habra resectivas ventanas cada opcion(abrir las ventanas respectivas a cada gestionar)---------------------------------------
-# arreglar para poder navegar entre ventanas
-def logout():
-    rgp.destroy()
-    from LogIn import logIn
-    logIn()
-
 def managEmployees():
+    rgp.destroy()
     from Employees import Employees
     Employees()
 
-def managProducts():
-    from Products import Products 
-    Products()
+def managInputs():
+    rgp.destroy()
+    from Inputs import Inputs
+    Inputs()
+
+def pontiOfSale():
+    rgp.destroy()
+    from POS import POS 
+    POS()
+
+def managPosition():
+    rgp.destroy()
+    from Position import Position
+    Position()
+
+def managProductCategory():
+    rgp.destroy()
+    from ProductCategory import ProductCategory
+    ProductCategory()
+
+def managSells():
+    rgp.destroy()
+    from Sells import Sells 
+    Sells()
+
+def managShopping():
+    rgp.destroy()
+    from Shopping import Shopping
+    Shopping()
 
 def  managSupplier():
+    rgp.destroy()
     from Suppliers import Suppliers 
     Suppliers()
 
@@ -44,29 +66,28 @@ MenuButton_barFrame.place(x=0, y=0)
 MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
 MenuButton_barFrame.menu.add_command(label="Configurar pa que salga el usuario", foreground="black", font=("New Times Roman", 12))
 MenuButton_barFrame.menu.add_separator()
-MenuButton_barFrame.menu.add_command(label="Gestion de ventas", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame.menu.add_command(label="Gestion de compras", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame.menu.add_command(label="Gestion de empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
-MenuButton_barFrame.menu.add_command(label="Gestion de proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
-MenuButton_barFrame.menu.add_command(label="Gestion de productos", foreground="white", font=("New Times Roman", 12), command= managProducts)
-MenuButton_barFrame.menu.add_command(label="Gestion de usuarios", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame.menu.add_separator()
-MenuButton_barFrame.menu.add_command(label="Cerrar Sesion", foreground="black", font=("New Times Roman", 12), command=logout)
+MenuButton_barFrame.menu.add_command(label="Gestion de Empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
+MenuButton_barFrame.menu.add_command(label="Gestion de Insumos", foreground="white", font=("New Times Roman", 12), command=managInputs)
+MenuButton_barFrame.menu.add_command(label="Punto de Venta", foreground="white", font=("New Times Roman", 12), command=pontiOfSale)
+MenuButton_barFrame.menu.add_command(label="Puesto de Empleados", foreground="white", font=("New Times Roman", 12), command=managPosition)
+MenuButton_barFrame.menu.add_command(label="Categoria de Productos", foreground="white", font=("New Times Roman", 12), command= managProductCategory)
+MenuButton_barFrame.menu.add_command(label="Gestion de Ventas", foreground="white", font=("New Times Roman", 12), command=managSells)
+MenuButton_barFrame.menu.add_command(label="Gestion de Compras", foreground="white", font=("New Times Roman", 12), command=managShopping)
+MenuButton_barFrame.menu.add_command(label="Gestion de Proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
 MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
 
-
 Main_Label = Label(rgp, text="PRODUCTOS", fg="black", bg="white", font=("Arial Black", 18))
-Main_Label.place(x=330, y=55)
+Main_Label.place(x=430, y=55)
 
 # Table to display products
-product_columns = ("ID Producto", "Categoria", "Nombre", "Costo")
+product_columns = ("Categoria", "Nombre", "Descripcion", "Costo", "Existencia")
 product_tree = ttk.Treeview(rgp, columns=product_columns, show="headings", height=5)
 for col in product_columns:
     product_tree.heading(col, text=col)
 product_tree.place(x=20, y=160, height=300)
 
 product_scrollbar = Scrollbar(rgp, orient="vertical", command=product_tree.yview)
-product_scrollbar.place(x=802, y=165, height=290)
+product_scrollbar.place(x=1002, y=165, height=290)
 product_tree.configure(yscrollcommand=product_scrollbar.set)
 
 
@@ -78,10 +99,15 @@ def load_products():
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("EXEC mostrar_productos_activos")
+        cursor.execute("EXEC mostrar_productos_activos") #el metodo no imprime el noombre de ahi en mas todo bien 
         rows = cursor.fetchall()
         for row in rows:
-            formatted_row = (row[0], row[1], row[2], f"{row[3]:.2f}")
+            formatted_row = (
+                row[1], 
+                row[2], 
+                row[3], 
+                f"{row[4]:.2f}", 
+                f"{row[5]:.2f}")
             product_tree.insert("", "end", values=formatted_row)
         cursor.close()
         conn.close()
@@ -89,7 +115,7 @@ def load_products():
         messagebox.showerror("Error", f"Error al cargar los productos: {e}")
 
 # Function to open add product window
-def Add_ProductWindow():
+def Add_Normal_Product_Window():
     ap = Toplevel(rgp)
     ap.geometry("300x350")
     ap.configure(bg="white")
@@ -97,10 +123,8 @@ def Add_ProductWindow():
     #ap.iconbitmap('F:\\6to Semestre\\Gestión De Proyectos De Software\\S-O project\Extra\\icon sf.ico')
 
     def Aceptar_ButtonAction():
-        values = "Configurar para obtener id"
-        # Obtener los valores ingresados por el usuario
-        id_producto = values
-        category = Category_combobox.get()
+        category_selected = Category_combobox.get()
+        id_category = category_dict.get(category_selected, None)
         nombre = Name_Box.get()
         descripcion = Description_Box.get()
         costo = float(Precio_Box.get())
@@ -110,47 +134,61 @@ def Add_ProductWindow():
         try:
             conn = pyodbc.connect('DRIVER={SQL SERVER};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123')
             cursor = conn.cursor()
-            cursor.execute("EXEC addProducto ?, ?, ?, ?", id_producto, nombre, descripcion, costo)
+            cursor.execute("EXEC addProducto ?, ?, ?, ?, ?", id_category, nombre, descripcion, costo, existencia)
             conn.commit()
             cursor.close()
             conn.close()
 
             # Mostrar la información obtenida en la ventana principal (rgp)
-            product_tree.insert("", "end", values=(id_producto, nombre, descripcion, costo))
+            product_tree.insert("", "end", values=(category_selected, nombre, descripcion, costo, existencia))
             ap.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"Error al insertar el producto: {e}")
 
-
-    ID_Product_Label = Label(ap, text="ID Producto", fg="black", bg="white", font=("Arial Black", 9))
-    ID_Product_Label.place(x=28, y=31)
-    ID_Product_Value = Label(ap, text="01", fg="black", bg="lightgray", font=("Arial Black", 9), width=10)
-    ID_Product_Value.place(x=115, y=35)
-
     Category_Labael = Label(ap, text="Categoria", fg="black", bg="white", font=("Arial Black", 9))
-    Category_Labael.place(x=30, y=72)
+    Category_Labael.place(x=30, y=30)
     Category_combobox = ttk.Combobox(ap, width=20)
-    Category_combobox.place(x=115, y=72) 
+    Category_combobox.place(x=115, y=35)
+
+    # Cargar categoria con ID en el ComboBox
+    def load_categories_combobox():
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("EXEC mostrarCategorias")
+            rows = cursor.fetchall()
+
+            #Crear diccionario para almacenar {nombre: id}
+            category_dict = {row[1]: row[0] for row in rows} # row[0]: id_categoria, row[1]: nombre de la categoria
+            Category_combobox['values'] = list(category_dict.keys()) #Mostrar nombre de los puestos
+            cursor.close()
+            conn.close()
+            return category_dict
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al cargar los puestos en ComboBox: {e}")
+
+    # Llamar a la función para cargar los puestos en el ComboBox
+    category_dict = load_categories_combobox()
 
     Name_Label = Label(ap, text="Nombre", fg="black", bg="white", font=("Arial Black", 9))
-    Name_Label.place(x=30, y=100)
+    Name_Label.place(x=30, y=75)
     Name_Box = Entry(ap, width=20, bg="lightgray" )
-    Name_Box.place(x=115, y=105)
+    Name_Box.place(x=115, y=75)
 
     Description_Label = Label(ap, text="Descripcion", fg="black", bg="white", font=("Arial Black", 9))
-    Description_Label.place(x=30, y=135)
+    Description_Label.place(x=30, y=115)
     Description_Box = Entry(ap, width=20, bg="lightgray" )
-    Description_Box.place(x=115, y=135)
+    Description_Box.place(x=115, y=115)
 
     Precio_Label = Label(ap, text="Costo $", fg="black", bg="white", font=("Arial Black", 9))
-    Precio_Label.place(x=30, y=165)
+    Precio_Label.place(x=30, y=155)
     Precio_Box = Entry(ap, width=5, bg="lightgray" )
-    Precio_Box.place(x=115, y=165)
+    Precio_Box.place(x=115, y=155)
     
     Existence_Label = Label(ap, text="Existencia ", fg="black", bg="white", font=("Arial Black", 9))
-    Existence_Label.place(x=30, y=192)
+    Existence_Label.place(x=30, y=200)
     Existence_Box = Entry(ap, width=5, bg="lightgray" )
-    Existence_Box.place(x=115, y=192)
+    Existence_Box.place(x=115, y=200)
 
     Aceptar_Button = Button(ap, text="Aceptar", bg="green", fg="black", font=("Arial Black", 9), command=Aceptar_ButtonAction)
     Aceptar_Button.place(x=30, y=240)
@@ -161,16 +199,14 @@ def Add_ProductWindow():
 # Function to open add product window kitchen
 def Add_ProductWindow_Kitchen():
     apc = Toplevel(rgp)
-    apc.geometry("500x350")
+    apc.geometry("300x350")
     apc.configure(bg="white")
     apc.title("Agregar Producto De Cocina")
     #ap.iconbitmap('F:\\6to Semestre\\Gestión De Proyectos De Software\\S-O project\Extra\\icon sf.ico')
 
     def Aceptar_ButtonAction():
-        values = "Configurar para obtener id"
-        # Obtener los valores ingresados por el usuario
-        id_producto = values
-        category = Category_combobox.get()
+        category_selected = Category_combobox.get()
+        id_category = category_dict.get(category_selected, None)
         nombre = Name_Box.get()
         descripcion = Description_Box.get()
         costo = float(Precio_Box.get())
@@ -179,51 +215,66 @@ def Add_ProductWindow_Kitchen():
         try:
             conn = pyodbc.connect('DRIVER={SQL SERVER};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123')
             cursor = conn.cursor()
-            cursor.execute("EXEC addProducto ?, ?, ?, ?", id_producto, nombre, descripcion, costo)
+            cursor.execute("EXEC addProductoCocina ?, ?, ?, ?", id_category, nombre, descripcion, costo)
             conn.commit()
             cursor.close()
             conn.close()
 
             # Mostrar la información obtenida en la ventana principal (rgp)
-            product_tree.insert("", "end", values=(id_producto, nombre, descripcion, costo))
+            product_tree.insert("", "end", values=(category_selected, nombre, descripcion, costo))
             apc.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"Error al insertar el producto: {e}")
-
-
-    ID_Product_Label = Label(apc, text="ID Producto", fg="black", bg="white", font=("Arial Black", 9))
-    ID_Product_Label.place(x=28, y=31)
-    ID_Product_Value = Label(apc, text="01", fg="black", bg="lightgray", font=("Arial Black", 9), width=10)
-    ID_Product_Value.place(x=115, y=35)
-
+    
     Category_Labael = Label(apc, text="Categoria", fg="black", bg="white", font=("Arial Black", 9))
-    Category_Labael.place(x=30, y=72)
+    Category_Labael.place(x=30, y=30)
     Category_combobox = ttk.Combobox(apc, width=20)
-    Category_combobox.place(x=115, y=72) 
+    Category_combobox.place(x=115, y=35)
+
+    # Cargar categoria con ID en el ComboBox
+    def load_categories_combobox():
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("EXEC mostrarCategorias")
+            rows = cursor.fetchall()
+
+            #Crear diccionario para almacenar {nombre: id}
+            category_dict = {row[1]: row[0] for row in rows} # row[0]: id_categoria, row[1]: nombre de la categoria
+            Category_combobox['values'] = list(category_dict.keys()) #Mostrar nombre de los puestos
+            cursor.close()
+            conn.close()
+            return category_dict
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al cargar los puestos en ComboBox: {e}")
+
+    # Llamar a la función para cargar los puestos en el ComboBox
+    category_dict = load_categories_combobox()
+    
 
     Name_Label = Label(apc, text="Nombre", fg="black", bg="white", font=("Arial Black", 9))
-    Name_Label.place(x=30, y=100)
+    Name_Label.place(x=30, y=75)
     Name_Box = Entry(apc, width=20, bg="lightgray" )
-    Name_Box.place(x=115, y=105)
+    Name_Box.place(x=115, y=75)
 
     Description_Label = Label(apc, text="Descripcion", fg="black", bg="white", font=("Arial Black", 9))
-    Description_Label.place(x=30, y=135)
+    Description_Label.place(x=30, y=115)
     Description_Box = Entry(apc, width=20, bg="lightgray" )
-    Description_Box.place(x=115, y=135)
+    Description_Box.place(x=115, y=115)
 
     Precio_Label = Label(apc, text="Costo $", fg="black", bg="white", font=("Arial Black", 9))
-    Precio_Label.place(x=30, y=165)
+    Precio_Label.place(x=30, y=155)
     Precio_Box = Entry(apc, width=5, bg="lightgray" )
-    Precio_Box.place(x=115, y=165)
+    Precio_Box.place(x=115, y=155)
     
     Aceptar_Button = Button(apc, text="Aceptar", bg="green", fg="black", font=("Arial Black", 9), command=Aceptar_ButtonAction)
-    Aceptar_Button.place(x=30, y=240)
+    Aceptar_Button.place(x=30, y=200)
 
     Cancelar_Button = Button(apc, text="Cancelar", bg="red", fg="black", font=("Arial Black", 9), command=apc.destroy)
-    Cancelar_Button.place(x=100, y=240)
+    Cancelar_Button.place(x=100, y=200)
 
     Agregar_Ingredientes = Button(apc, text="Agregar Ingredientes", bg="#D9D9D9", fg="black", font=("Arial Black", 9), command=Add_Ingredients)
-    Agregar_Ingredientes.place(x=310, y=40)
+    Agregar_Ingredientes.place(x=210, y=40)
 
 
 def Add_Ingredients(): 
@@ -382,17 +433,17 @@ def Delete_Product():
     except Exception as e:
         messagebox.showerror("Error", f"Error al marcar el producto como inactivo: {e}")
 
-Add_Product = Button(rgp, text="Agregar producto", fg="black", bg="#CE7710", command=Add_ProductWindow, font=("Arial Black", 9))
+Add_Product = Button(rgp, text="Agregar producto", fg="black", bg="#CE7710", command=Add_Normal_Product_Window, font=("Arial Black", 9))
 Add_Product.place(x=30, y=120)
 
-Add_Product_kitchen = Button(rgp, text="Producto Cocina", fg="black", bg="#CE7710", command=Add_ProductWindow_Kitchen, font=("Arial Black", 9))
-Add_Product_kitchen.place(x=250, y=120)
+Add_Product_kitchen = Button(rgp, text="Agregar Producto Cocina", fg="black", bg="#CE7710", command=Add_ProductWindow_Kitchen, font=("Arial Black", 9))
+Add_Product_kitchen.place(x=290, y=120)
 
-Edit_Product = Button(rgp, text="Editar producto", fg="black", bg="#CE7710", command=Edit_ProductWindow, font=("Arial Black", 9))
-Edit_Product.place(x=460, y=120)
+Edit_Product = Button(rgp, text="Editar Producto", fg="black", bg="#CE7710", command=Edit_ProductWindow, font=("Arial Black", 9))
+Edit_Product.place(x=610, y=120)
 
 Delete_Product = Button(rgp, text="Desactivar Producto", fg="black", bg="#CE7710", command=Delete_Product, font=("Arial Black", 9))
-Delete_Product.place(x=640, y=120)
+Delete_Product.place(x=840, y=120)
 
 load_products()
 rgp.mainloop()

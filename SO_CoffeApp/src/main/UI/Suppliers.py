@@ -5,7 +5,7 @@ from tkinter import ttk
 
 # Configuration main window---------------------------
 rprov = Tk()
-rprov.geometry("1240x530")
+rprov.geometry("840x530")
 rprov.minsize(400, 400)
 rprov.maxsize(1500, 580)
 rprov.configure(bg="white")
@@ -16,23 +16,46 @@ topBar_frame = Frame(rprov, bg="#CE7710")
 topBar_frame.place(x=0, y=0, relwidth=1, height=30)
 
 #Logica de los command para que habra resectivas ventanas cada opcion(abrir las ventanas respectivas a cada gestionar)---------------------------------------
-# arreglar para poder navegar entre ventanas
-def logout():
-    rprov.destroy()
-    from LogIn import logIn
-    logIn()
-
 def managEmployees():
+    rprov.destroy()
     from Employees import Employees
     Employees()
 
+def managInputs():
+    rprov.destroy()
+    from Inputs import Inputs
+    Inputs()
+
+def pontiOfSale():
+    rprov.destroy()
+    from POS import POS 
+    POS()
+
+def managPosition():
+    rprov.destroy()
+    from Position import Position
+    Position()
+
+def managProductCategory():
+    rprov.destroy()
+    from ProductCategory import ProductCategory
+    ProductCategory()
+
 def managProducts():
+    rprov.destroy()
     from Products import Products 
     Products()
 
-def  managSupplier():
-    from Suppliers import Suppliers 
-    Suppliers()
+def managSells():
+    rprov.destroy()
+    from Sells import Sells 
+    Sells()
+
+def managShopping():
+    rprov.destroy()
+    from Shopping import Shopping
+    Shopping()
+
 
 # Load the image using PIL
 MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
@@ -42,26 +65,30 @@ MenuButton_barFrame.place(x=0, y=0)
 MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
 MenuButton_barFrame.menu.add_command(label="Configurar pa que salga el usuario", foreground="black", font=("New Times Roman", 12))
 MenuButton_barFrame.menu.add_separator()
-MenuButton_barFrame.menu.add_command(label="Gestion de ventas", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame.menu.add_command(label="Gestion de compras", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame.menu.add_command(label="Gestion de empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
-MenuButton_barFrame.menu.add_command(label="Gestion de proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
-MenuButton_barFrame.menu.add_command(label="Gestion de productos", foreground="white", font=("New Times Roman", 12), command= managProducts)
-MenuButton_barFrame.menu.add_command(label="Gestion de usuarios", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame.menu.add_separator()
-MenuButton_barFrame.menu.add_command(label="Cerrar Sesion", foreground="black", font=("New Times Roman", 12), command=logout)
+MenuButton_barFrame.menu.add_command(label="Gestion de Empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
+MenuButton_barFrame.menu.add_command(label="Gestion de Insumos", foreground="white", font=("New Times Roman", 12), command=managInputs)
+MenuButton_barFrame.menu.add_command(label="Punto de Venta", foreground="white", font=("New Times Roman", 12), command=pontiOfSale)
+MenuButton_barFrame.menu.add_command(label="Puestos de Empleados", foreground="white", font=("New Times Roman", 12), command=managPosition)
+MenuButton_barFrame.menu.add_command(label="Categoria de Productos", foreground="white", font=("New Times Roman", 12), command= managProductCategory)
+MenuButton_barFrame.menu.add_command(label="Gestion de Productos", foreground="white", font=("New Times Roman", 12), command=managProducts)
+MenuButton_barFrame.menu.add_command(label="Gestion de Ventas", foreground="white", font=("New Times Roman", 12), command=managSells)
+MenuButton_barFrame.menu.add_command(label="Gestion de Compras", foreground="white", font=("New Times Roman", 12), command=managShopping)
 MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
 
 Main_Label = Label(rprov, text="PROVEEDOR", fg="black", bg="white", font=("Arial Black", 18))
-Main_Label.place(x=520, y=45)
+Main_Label.place(x=350, y=45)
 
 # Table to display suppliers
-product_columns = ("ID Proveedores", "Nombre", "Apellidos", "Telefono", "RFC", "Correo")
-product_tree = ttk.Treeview(rprov, columns=product_columns, show="headings", height=5)
+supplier_columns = ("Nombre", "Telefono", "RFC", "Correo")
+supplier_tree = ttk.Treeview(rprov, columns=supplier_columns, show="headings", height=5)
 
-for col in product_columns:
-    product_tree.heading(col, text=col)
-product_tree.place(x=20, y=160, height=200)
+supplier_scrollbar = Scrollbar(rprov, orient="vertical", command=supplier_tree.yview)
+supplier_scrollbar.place(x=800, y=162, height=195)
+supplier_tree.configure(yscrollcommand=supplier_scrollbar.set)
+
+for col in supplier_columns:
+    supplier_tree.heading(col, text=col)
+supplier_tree.place(x=20, y=160, height=200)
 
 # Connection db---------------------------------------------------------
 def get_db_connection():
@@ -71,15 +98,20 @@ def get_db_connection():
 #Load suppliers to show---------------------------------------------------
 def load_suppliers():
     try:
+        # Limpia el TreeView antes de recargar los registros
+        supplier_tree.delete(*supplier_tree.get_children())
         conn = get_db_connection()
         cursor = conn.cursor()
-        # cursor.execute("EXEC mostrar_empleados_activos") Modificar
+        cursor.execute("EXEC mostrar_proveedores_activos") 
         rows = cursor.fetchall()
         # Concatenate names directly in the loop for efficiency
         for row in rows:
-            full_name = f"{row[2]} {row[3]}"  # Combine all names
-            formatted_row = (row[0], row[1], full_name)
-            product_tree.insert("", "end", values=formatted_row)
+            formatted_row = (
+                row[1], #Nombre
+                row[2], #Telefono
+                row[3], #RFC
+                row[4]) #Correo
+            supplier_tree.insert("", "end", values=formatted_row)
         cursor.close()
         conn.close()
     except Exception as e:
@@ -87,7 +119,7 @@ def load_suppliers():
 load_suppliers()
 
 # Function to open add suppliers window---------------------------------------------
-def Add_ProductWindow():
+def Add_SupplierWindow():
     ap = Toplevel(rprov)
     ap.geometry("400x550")
     ap.configure(bg="white")
@@ -96,36 +128,35 @@ def Add_ProductWindow():
 
     def Aceptar_ButtonAction():
         # Obtener los valores ingresados por el usuario
-        id_proveedor = Id_Supplier_Box.get()
         nombre = Name_Box.get()
+        telefono = Number_Box.get()
         rfc = RFC_Box.get()
         correo = Mail_Box.get()
-        telefono = Number_Box.get()
 
         # Agregar la información a la base de datos utilizando un procedimiento almacenado
         try:
             conn = pyodbc.connect('DRIVER={SQL SERVER};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123')
             cursor = conn.cursor()
-            cursor.execute("EXEC addEmpleado ?, ?, ?, ?, ?", id_proveedor, nombre, rfc, correo, telefono)
+            cursor.execute("EXEC addProveedor ?, ?, ?, ?", nombre, telefono, rfc, correo)
             conn.commit()
             cursor.close()
             conn.close()
 
             # Mostrar la información obtenida en la ventana principal (rgp)
-            product_tree.insert("", "end", values=(id_proveedor, nombre, rfc, correo, telefono))
+            supplier_tree.insert("", "end", values=(nombre, telefono, rfc, correo ))
             ap.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"Error al insertar el producto: {e}")
 
-    ID_Supplier_Label = Label(ap, text="ID Proveedor", fg="black", bg="white", font=("Arial Black", 9))
-    ID_Supplier_Label.place(x=30, y=30)
-    Id_Supplier_Box = Entry(ap, width=5, bg="lightgray" )
-    Id_Supplier_Box.place(x=155, y=35)
-
     Name_Label = Label(ap, text="Nombre", fg="black", bg="white", font=("Arial Black", 9))
-    Name_Label.place(x=30, y=75)
+    Name_Label.place(x=30, y=30)
     Name_Box = Entry(ap, width=20, bg="lightgray" )
-    Name_Box.place(x=155, y=75)
+    Name_Box.place(x=155, y=35)
+    
+    Number_Label = Label(ap, text="Telefono", fg="black", bg="white", font=("Arial Black", 9))
+    Number_Label.place(x=30, y=75)
+    Number_Box = Entry(ap, width=12, bg="lightgray" )
+    Number_Box.place(x=155, y=75)
 
     RFC_Label = Label(ap, text="RFC", fg="black", bg="white", font=("Arial Black", 9))
     RFC_Label.place(x=30, y=115)
@@ -137,123 +168,231 @@ def Add_ProductWindow():
     Mail_Box = Entry(ap, width=30, bg="lightgray" )
     Mail_Box.place(x=155, y=150)
 
-    Number_Label = Label(ap, text="Telefono", fg="black", bg="white", font=("Arial Black", 9))
-    Number_Label.place(x=30, y=190)
-    Number_Box = Entry(ap, width=12, bg="lightgray" )
-    Number_Box.place(x=155, y=190)
-
     Aceptar_Button = Button(ap, text="Aceptar", bg="green", fg="black", font=("Arial Black", 9), command=Aceptar_ButtonAction)
-    Aceptar_Button.place(x=300, y=50)
+    Aceptar_Button.place(x=200, y=250)
 
     Cancelar_Button = Button(ap, text="Cancelar", bg="red", fg="black", font=("Arial Black", 9), command=ap.destroy)
-    Cancelar_Button.place(x=300, y=90)
+    Cancelar_Button.place(x=280, y=250)
+
+def obtener_id_proveedor_por_rfc(rfc):
+    """Obtiene el id_proveedor a partir del RFC."""
+    try:
+        conn = pyodbc.connect('DRIVER={SQL SERVER};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123')
+        cursor = conn.cursor()
+        cursor.execute("SELECT id_proveedor FROM proveedor WHERE rfc = ?", rfc)
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+        print(result)
+
+        if result:
+            return result[0]  # Regresa el id_empleado
+        else:
+            messagebox.showerror("Error", "Proveedor no encontrado")
+            return None
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al obtener el ID del proveedor: {e}")
+        return None
 
 # Function to open edit employee window ---------------------------------------------
-def Edit_EmployeeWindow():
-    selected_item = product_tree.selection()
+def Edit_SupplierWindow():
+    selected_item = supplier_tree.selection()
     if not selected_item:
         messagebox.showwarning("Advertencia", "Seleccione un Proveedor para editar")
         return
-
-    item = product_tree.item(selected_item)
+    
+    item = supplier_tree.item(selected_item)
     values = item["values"]
+    # Obtener el RFC del empleado seleccionado (suponiendo que es el valor en el índice 4)
+    rfc_proveedor = values[2]  # Ajusta según el índice correcto de RFC
+    
+    # Obtener el id_proveedor usando el RFC
+    id_proveedor = obtener_id_proveedor_por_rfc(rfc_proveedor)
+    if id_proveedor is None:
+        return  # Si no se encuentra el ID, no continuar con la edición
 
-    ee = Toplevel(rprov)
-    ee.geometry("400x550")
-    ee.configure(bg="white")
-    ee.title("Editar Empleado")
+    load_suppliers()
+    ep = Toplevel(rprov)
+    ep.geometry("400x550")
+    ep.configure(bg="white")
+    ep.title("Editar Empleado")
     #ep.iconbitmap('F:\\6to Semestre\\Gestión De Proyectos De Software\\S-O project\Extra\\icon sf.ico')
 
     def Aceptar_ButtonAction():
         # Obtener los valores modificados por el usuario
-        id_proveedor = values[0]
         nombre = Name_Box.get()
+        telefono = Number_Box.get()
         rfc = RFC_Box.get()
         correo = Mail_Box.get()
-        telefono = Number_Box.get()
-        # Actualizar la información en la base de datos (simulado)
+
+        load_suppliers()
         try:
             conn = pyodbc.connect('DRIVER={SQL SERVER};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123')
             cursor = conn.cursor()
-            cursor.execute("EXEC modEmpleado ?, ?, ?, ?, ?", id_proveedor, nombre, rfc, correo, telefono)
+            cursor.execute("EXEC modProveedor ?, ?, ?, ?, ?", id_proveedor, nombre, telefono, rfc, correo)
             conn.commit()
             cursor.close()
             conn.close()
 
             # Actualizar la información en la tabla
-            product_tree.insert("", "end", values=(id_proveedor, nombre, rfc, correo, telefono))
-            ee.destroy()
+            supplier_tree.insert("", "end", values=(nombre, telefono, rfc, correo))
+            load_suppliers()
+            ep.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"Error al actualizar el producto: {e}")
-    ID_Employee_Label = Label(ee, text="ID Producto", fg="black", bg="white", font=("Arial Black", 9))
-    ID_Employee_Label.place(x=30, y=30)
-    ID_Empleado_Value = Label(ee, text=values[0], fg="black", bg="lightgray", font=("Arial Black", 9), width=10)
-    ID_Empleado_Value.place(x=115, y=35)
+    
+    Name_Label = Label(ep, text="Nombre", fg="black", bg="white", font=("Arial Black", 9))
+    Name_Label.place(x=30, y=30)
+    Name_Box = Entry(ep, width=20, bg="lightgray" )
+    Name_Box.place(x=155, y=35)
+    Name_Box.insert(0, values[0])
+    
+    Number_Label = Label(ep, text="Telefono", fg="black", bg="white", font=("Arial Black", 9))
+    Number_Label.place(x=30, y=75)
+    Number_Box = Entry(ep, width=12, bg="lightgray" )
+    Number_Box.place(x=155, y=75)
+    Number_Box.insert(0, values[1])
 
-    Name_Label = Label(ee, text="Nombre", fg="black", bg="white", font=("Arial Black", 9))
-    Name_Label.place(x=30, y=75)
-    Name_Box = Entry(ee, width=20, bg="lightgray" )
-    Name_Box.place(x=155, y=75)
-
-    RFC_Label = Label(ee, text="RFC", fg="black", bg="white", font=("Arial Black", 9))
+    RFC_Label = Label(ep, text="RFC", fg="black", bg="white", font=("Arial Black", 9))
     RFC_Label.place(x=30, y=115)
-    RFC_Box = Entry(ee, width=15, bg="lightgray" )
+    RFC_Box = Entry(ep, width=15, bg="lightgray" )
     RFC_Box.place(x=155, y=115)
+    RFC_Box.insert(0, values[2])
 
-    Mail_Label = Label(ee, text="Correo", fg="black", bg="white", font=("Arial Black", 9))
+    Mail_Label = Label(ep, text="Correo", fg="black", bg="white", font=("Arial Black", 9))
     Mail_Label.place(x=30, y=150)
-    Mail_Box = Entry(ee, width=30, bg="lightgray" )
+    Mail_Box = Entry(ep, width=30, bg="lightgray" )
     Mail_Box.place(x=155, y=150)
+    Mail_Box.insert(0, values[3])
 
-    Number_Label = Label(ee, text="Telefono", fg="black", bg="white", font=("Arial Black", 9))
-    Number_Label.place(x=30, y=190)
-    Number_Box = Entry(ee, width=12, bg="lightgray" )
-    Number_Box.place(x=155, y=190)
+    Aceptar_Button = Button(ep, text="Aceptar", bg="green", fg="black", font=("Arial Black", 9), command=Aceptar_ButtonAction)
+    Aceptar_Button.place(x=200, y=250)
 
-    Aceptar_Button = Button(ee, text="Aceptar", bg="green", fg="black", font=("Arial Black", 9), command=Aceptar_ButtonAction)
-    Aceptar_Button.place(x=300, y=50)
-
-    Cancelar_Button = Button(ee, text="Cancelar", bg="red", fg="black", font=("Arial Black", 9), command=ee.destroy)
-    Cancelar_Button.place(x=300, y=90)
+    Cancelar_Button = Button(ep, text="Cancelar", bg="red", fg="black", font=("Arial Black", 9), command=ep.destroy)
+    Cancelar_Button.place(x=280, y=250)
 
 #Function to delete a employee
-def Delete_Employee():
-    selected_item = product_tree.selection()
+def Delete_Supplier():
+    selected_item = supplier_tree.selection()
     if not selected_item:
-        messagebox.showwarning("Advertencia", "Seleccione un Proveedor para eliminar")
+        messagebox.showwarning("Advertencia", "Seleccione un Proveedor para desactivar")
         return
 
-    confirm = messagebox.askyesno("Confirmar", "¿Está seguro de que desea eliminar este Proveedor?")
+    confirm = messagebox.askyesno("Confirmar", "¿Está seguro de que desea Desactivar este Proveedor?")
     if not confirm:
         return
-
-    item = product_tree.item(selected_item)
-    id_proveedor = item["values"][0]
+    
+    item = supplier_tree.item(selected_item)
+    values = item["values"]
+    # Obtener el RFC del empleado seleccionado (suponiendo que es el valor en el índice 4)
+    rfc_proveedor = values[2]  # Ajusta según el índice correcto de RFC
+    
+    # Obtener el id_proveedor usando el RFC
+    id_proveedor = obtener_id_proveedor_por_rfc(rfc_proveedor)
+    if id_proveedor is None:
+        return  # Si no se encuentra el ID, no continuar con la edición
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("EXEC marcar_empleado_inactivo @id_empleado = ?", id_proveedor)
+        cursor.execute("EXEC marcar_proveedor_inactivo @id_proveedor = ?", id_proveedor)
         conn.commit()
         cursor.close()
         conn.close()
 
-        product_tree.delete(selected_item)
+        supplier_tree.delete(selected_item)
         messagebox.showinfo("Éxito", "Proveedor marcado como inactivo correctamente.")
     except Exception as e:
         messagebox.showerror("Error", f"Error al marcar el Proveedor como inactivo: {e}")
 
+def load_suppliersInactive():
+    try:
+        # Limpia el TreeView antes de recargar los registros
+        supplier_tree.delete(*supplier_tree.get_children())
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("EXEC mostrar_proveedores_inactivos") 
+        rows = cursor.fetchall()
+        # Concatenate names directly in the loop for efficiency
+        for row in rows:
+            formatted_row = (
+                row[1], #Nombre
+                row[2], #Telefono
+                row[3], #RFC
+                row[4]) #Correo
+            supplier_tree.insert("", "end", values=formatted_row)
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al cargar los proveedores Inactivos: {e}")
+
+#Evento para la casilla de verificacion
+def toggle_inactive_suppliers():
+    if show_inactives_var.get():
+        load_suppliersInactive()  # Cargar proveedores inactivos
+    else:
+        load_suppliers()  # Cargar proveedores activos
+
+# Función para cargar empleados según el criterio de búsqueda
+def load_suppliers_filter(query=None):
+    try:
+        # Limpiar el TreeView antes de cargar los registros
+        supplier_tree.delete(*supplier_tree.get_children())
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Verificar si se hace una búsqueda o se cargan todos los proveedores activos
+        if query:
+            # Ejecutar el procedimiento almacenado para buscar por nombre
+            cursor.execute("EXEC buscarProveedorNombre ?", query)
+            rows = cursor.fetchall()
+        else:
+            # Ejecutar procedimiento para cargar todos los proveedores activos si no hay búsqueda
+            load_suppliers()
+
+        # Iterar sobre los resultados y formatear las filas para mostrar el puesto en lugar del ID
+        for row in rows:
+            formatted_row = (
+                row[0], #Nombre
+                row[1], #Telefono
+                row[2], #RFC
+                row[3]) #Correo
+            supplier_tree.insert("", "end", values=formatted_row)
+        cursor.close()
+        conn.close()
+
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al cargar los empleados: {e}")
+
+# Función para manejar el botón de búsqueda
+def search_suppliers():
+    query = search_entry.get()  # Obtener texto de búsqueda
+    load_suppliers_filter(query=query)
 
 
 #Buttons----------------------------------
-Add_Supplier = Button(rprov, text="Agregar Proveedor", fg="black", bg="#CE7710", command=Add_ProductWindow, font=("Arial Black", 9))
-Add_Supplier.place(x=180, y=120)
+# Barra de búsqueda
+search_entry = Entry(rprov, width=30)
+search_entry.place(x=70, y=40)
 
-Edit_Supplier = Button(rprov, text="Editar Proveedor", fg="black", bg="#CE7710", command=Edit_EmployeeWindow, font=("Arial Black", 9))
-Edit_Supplier.place(x=550, y=120)
+search_button = Button(rprov, text="Buscar", command=search_suppliers)
+search_button.place(x=20, y=40)
+# Variable para la casilla de verificación
+show_inactives_var = BooleanVar()
 
-Delete_Supplier = Button(rprov, text="Eliminar Proveedor", fg="black", bg="#CE7710", command=Delete_Employee, font=("Arial Black", 9))
-Delete_Supplier.place(x=950, y=120)
+# Casilla de verificación para mostrar proveedores inactivos
+show_inactives_check = Checkbutton(rprov, text="Mostrar Proveedores inactivos", variable=show_inactives_var, bg="white", command=toggle_inactive_suppliers)
+show_inactives_check.place(x=20, y=120)
+
+Add_Supplier = Button(rprov, text="Agregar Proveedor", fg="black", bg="#CE7710", command=Add_SupplierWindow, font=("Arial Black", 9))
+Add_Supplier.place(x=230, y=120)
+
+Edit_Supplier = Button(rprov, text="Editar Proveedor", fg="black", bg="#CE7710", command=Edit_SupplierWindow, font=("Arial Black", 9))
+Edit_Supplier.place(x=440, y=120)
+
+Delete_Supplier = Button(rprov, text="Desactivar Proveedor", fg="black", bg="#CE7710", command=Delete_Supplier, font=("Arial Black", 9))
+Delete_Supplier.place(x=640, y=120)
 
 
 #END--------------------------------------------------

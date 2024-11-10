@@ -117,21 +117,6 @@ def configure_scrollregion1(event):
 
 Canvas_scrollbar1.bind("<Configure>", configure_scrollregion1)
 
-# ScrollBar products_frame para productos NO enteros
-Canvas_scrollbar2 = Canvas(products_frame, height=200)
-Canvas_scrollbar2.pack(side=TOP, fill=BOTH, expand=True, pady=(10, 0))  # También side=TOP
-inner_frame2 = Frame(Canvas_scrollbar2)
-Canvas_scrollbar2.create_window((0, 0), window=inner_frame2, anchor="nw")
-
-ScrollBar_Products2 = Scrollbar(Canvas_scrollbar2, orient=VERTICAL, command=Canvas_scrollbar2.yview)
-ScrollBar_Products2.pack(side=RIGHT, fill=Y)
-Canvas_scrollbar2.config(yscrollcommand=ScrollBar_Products2.set)
-
-# Configuración para ajustar la región desplazable de productos NO enteros
-def configure_scrollregion2(event):
-    Canvas_scrollbar2.configure(scrollregion=Canvas_scrollbar2.bbox("all"))
-
-Canvas_scrollbar2.bind("<Configure>", configure_scrollregion2)
 
 
 #Customize Checkout_frame----------------------------------------

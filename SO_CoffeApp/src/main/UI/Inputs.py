@@ -19,10 +19,7 @@ topBar_frame.place(x=0, y=0, relwidth=1, height=30)
 
 #Logica de los command para que habra resectivas ventanas cada opcion(abrir las ventanas respectivas a cada gestionar)---------------------------------------
 # arreglar para poder navegar entre ventanas
-def logout():
-    inp.destroy()
-    from LogIn import logIn
-    logIn()
+
 
 def managEmployees():
     from Employees import Employees
