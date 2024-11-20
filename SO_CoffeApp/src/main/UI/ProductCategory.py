@@ -28,6 +28,11 @@ def managInputs():
     from Inputs import Inputs
     Inputs()
 
+def managOutPuts():
+    category.destroy()
+    from OutPuts import OutPuts
+    OutPuts()
+
 def pontiOfSale():
     category.destroy()
     from POS import POS 
@@ -68,6 +73,7 @@ MenuButton_barFrame.place(x=0, y=0)
 MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
 MenuButton_barFrame.menu.add_command(label="Gestion de Empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
 MenuButton_barFrame.menu.add_command(label="Gestion de Insumos", foreground="white", font=("New Times Roman", 12), command=managInputs)
+MenuButton_barFrame.menu.add_command(label="Gestion de Salidas", foreground="white", font=("New Times Roman", 12), command=managOutPuts)
 MenuButton_barFrame.menu.add_command(label="Punto de Venta", foreground="white", font=("New Times Roman", 12), command=pontiOfSale)
 MenuButton_barFrame.menu.add_command(label="Puestos de Empelados", foreground="white", font=("New Times Roman", 12), command=managPosition)
 MenuButton_barFrame.menu.add_command(label="Gestion de Productos", foreground="white", font=("New Times Roman", 12), command=managProducts)
@@ -144,7 +150,7 @@ def add_CategoryWindow():
     Cancelar_Button = Button(adca, text="Cancelar", bg="red", fg="black", font=("Arial Black", 9), command=adca.destroy)
     Cancelar_Button.place(x=100, y=200)
 
-Add_Position = Button(category, text="Agregar Posicion", fg="black", bg="#CE7710", command=add_CategoryWindow, font=("Arial Black", 9))
-Add_Position.place(x=20, y=60)
+Add_CategoryBt = Button(category, text="Agregar Categoria", fg="black", bg="#CE7710", command=add_CategoryWindow, font=("Arial Black", 9))
+Add_CategoryBt.place(x=20, y=60)
 
 category.mainloop()

@@ -1,3 +1,4 @@
+from functools import partial
 import pyodbc
 from tkinter import *
 from tkinter import Scrollbar
@@ -16,6 +17,7 @@ rgp.title("Registrar nuevo producto")
 #Top Bar-----------------------------------------------
 topBar_frame = Frame(rgp, bg="#CE7710")
 topBar_frame.place(x=0, y=0, relwidth=1, height=30)
+
 
 #Logica de los command para que habra resectivas ventanas cada opcion(abrir las ventanas respectivas a cada gestionar)---------------------------------------
 def managEmployees():
@@ -64,8 +66,6 @@ MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
 MenuButton_barFrame = Menubutton(topBar_frame, image=MB_image ,bg="#CE7710", width=30, height=30)
 MenuButton_barFrame.place(x=0, y=0)
 MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
-MenuButton_barFrame.menu.add_command(label="Configurar pa que salga el usuario", foreground="black", font=("New Times Roman", 12))
-MenuButton_barFrame.menu.add_separator()
 MenuButton_barFrame.menu.add_command(label="Gestion de Empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
 MenuButton_barFrame.menu.add_command(label="Gestion de Insumos", foreground="white", font=("New Times Roman", 12), command=managInputs)
 MenuButton_barFrame.menu.add_command(label="Punto de Venta", foreground="white", font=("New Times Roman", 12), command=pontiOfSale)
@@ -97,17 +97,18 @@ def get_db_connection():
 
 def load_products():
     try:
+        product_tree.delete(*product_tree.get_children())
         conn = get_db_connection()
         cursor = conn.cursor()
         cursor.execute("EXEC mostrar_productos_activos") #el metodo no imprime el noombre de ahi en mas todo bien 
         rows = cursor.fetchall()
         for row in rows:
             formatted_row = (
-                row[1], 
                 row[2], 
+                row[1], 
                 row[3], 
                 f"{row[4]:.2f}", 
-                f"{row[5]:.2f}")
+                row[5])
             product_tree.insert("", "end", values=formatted_row)
         cursor.close()
         conn.close()
@@ -211,26 +212,31 @@ def Add_ProductWindow_Kitchen():
         descripcion = Description_Box.get()
         costo = float(Precio_Box.get())
 
-        # Agregar la información a la base de datos utilizando un procedimiento almacenado
+        # Agregar la información a la base de datos
         try:
             conn = pyodbc.connect('DRIVER={SQL SERVER};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123')
             cursor = conn.cursor()
             cursor.execute("EXEC addProductoCocina ?, ?, ?, ?", id_category, nombre, descripcion, costo)
+            
+            # Obtener el ID del producto recién agregado para pasar a `Add_Ingredients`
+            cursor.execute("SELECT id_producto FROM productos WHERE descripcion = ?", descripcion)
+            id_producto = cursor.fetchone()[0]
+            print(id_producto)
+
             conn.commit()
             cursor.close()
             conn.close()
 
-            # Mostrar la información obtenida en la ventana principal (rgp)
-            product_tree.insert("", "end", values=(category_selected, nombre, descripcion, costo))
-            apc.destroy()
+            # Abre la ventana para añadir insumos y pasa `id_producto`
+            Add_Ingredients(id_producto)
         except Exception as e:
             messagebox.showerror("Error", f"Error al insertar el producto: {e}")
-    
+
     Category_Labael = Label(apc, text="Categoria", fg="black", bg="white", font=("Arial Black", 9))
     Category_Labael.place(x=30, y=30)
     Category_combobox = ttk.Combobox(apc, width=20)
     Category_combobox.place(x=115, y=35)
-
+    
     # Cargar categoria con ID en el ComboBox
     def load_categories_combobox():
         try:
@@ -268,41 +274,163 @@ def Add_ProductWindow_Kitchen():
     Precio_Box.place(x=115, y=155)
     
     Aceptar_Button = Button(apc, text="Aceptar", bg="green", fg="black", font=("Arial Black", 9), command=Aceptar_ButtonAction)
-    Aceptar_Button.place(x=30, y=200)
+    Aceptar_Button.place(x=30, y=240)
 
     Cancelar_Button = Button(apc, text="Cancelar", bg="red", fg="black", font=("Arial Black", 9), command=apc.destroy)
-    Cancelar_Button.place(x=100, y=200)
+    Cancelar_Button.place(x=108, y=240)
 
-    Agregar_Ingredientes = Button(apc, text="Agregar Ingredientes", bg="#D9D9D9", fg="black", font=("Arial Black", 9), command=Add_Ingredients)
-    Agregar_Ingredientes.place(x=210, y=40)
-
-
-def Add_Ingredients(): 
+def Add_Ingredients(id_producto):
     ai = Toplevel(rgp)
-    ai.geometry("1150x733")
+    ai.geometry("1050x600")
     ai.configure(bg="#C9C9C9")
     ai.title("Agregar Ingredientes")
-    #Frames----------------------------------------------
+
+    # Frames ----------------------------------------------
     bar_frame = Frame(ai, bg="#CE7710")
     ingredients_frame = Frame(ai, bg="white")
     list_frame = Frame(ai, bg="white")
 
-    #Customize Frame
+    # Customize Frame
     ingredients_frame.place(x=30, y=60, width=700, height=450)
-    list_frame.place(x=745, y=60, width=370, height=450)
+    list_frame.place(x=745, y=60, width=270, height=450)
     bar_frame.place(x=0, y=0, relwidth=1, height=30)
+    
+    def complete_detail_input():
+        if not selected_inputs:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                try:
+                    cursor.execute("DELETE FROM productos WHERE id_producto = ?", (id_producto,))
+                    conn.commit()
+                    messagebox.showinfo("Cancelado", "Producto eliminado ya que no se agregaron insumos.")
+                except Exception as e:
+                    messagebox.showerror("Error", f"Error al eliminar el producto: {e}")
+                finally:
+                    ai.destroy()  # Cerrar la ventana después de la operación
+            return
+
+        try:
+            with get_db_connection() as conn:
+                cursor = conn.cursor()
+                for insumo in selected_inputs:
+                    id_input = insumo["id"]
+                    cantidad = insumo["cantidad"]
+                    print(f"Ejecutando query con id_producto: {id_producto}, id_input: {id_input}, cantidad: {cantidad}")  # Depuración
+                    
+                    cursor.execute(
+                        "EXEC addDetalleInsumo ?, ?, ?",
+                        (id_producto, id_input, cantidad)
+                    )
+                conn.commit()
+                messagebox.showinfo("Éxito", "Producto e insumos agregados correctamente.")
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al agregar insumos: {e}")
+        finally:
+            ai.destroy()
 
 
-    #Buttons and Labels main window
-    CancelOrder_Button = Button(ai, text="Cancelar", font=("Katibeh",15), fg="red", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="red")
-    CancelOrder_Button.config(bg=ai.cget('bg'))
+
+    # Buttons and Labels main window
+    CancelOrder_Button = Button(ai, text="Cancelar", font=("Katibeh", 15), fg="white", bg="red", overrelief=FLAT, width=25, highlightbackground="red")
     CancelOrder_Button.place(x=220, y=550, anchor="center", width=200)
 
-    HoldOrder_Button = Button(ai, text="Aceptar", font=("Katibeh",15), fg="green", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="green")
-    HoldOrder_Button.config(bg=ai.cget('bg'))
+    HoldOrder_Button = Button(ai, text="Aceptar", font=("Katibeh", 15), fg="white", bg="green", overrelief=FLAT, width=25, highlightbackground="green", command=complete_detail_input)
     HoldOrder_Button.place(x=440, y=550, anchor="center", width=200)
 
-    #ScrollBar products_frame  --------------------------------------------------- 
+    # List to store selected ingredients
+    selected_inputs = []
+
+    # Method to retrieve inputs from the database
+    def get_inputs():
+        conn = get_db_connection()  
+        if not conn:
+            return []
+
+        inputs = []
+        cursor = conn.cursor()
+        try:
+            cursor.execute("EXEC mostrarInsumos")  # Call the stored procedure
+            for row in cursor:
+                inputs.append({
+                    "id": row[0],  # ID del insumo (asegúrate de que sea la primera columna en el resultado)
+                    "nombre": row[1],  # Nombre del insumo
+                    "Descripcion": row[3],  # Descripción
+                    "Existencia": row[2]  # Existencia
+                })
+        finally:
+            if conn:
+                conn.close()
+
+        return inputs
+
+
+    # Create buttons for each input item
+    def create_inputs_buttons(inputs, inner_frame):
+        column_count = 4  # Number of columns for the button grid
+        current_column = 0
+        current_row = 0
+
+        for input_item in inputs:
+            input_name = input_item["nombre"]
+            input_description = input_item["Descripcion"]
+            input_existence = input_item["Existencia"]
+
+            button = Button(
+                inner_frame,
+                text=f"{input_name} \n {input_description} \n {input_existence}",
+                command=partial(on_input_click, input_item["id"], input_name, input_description),
+                width=20  # Set button width
+            )
+
+
+            # Use grid layout manager for positioning
+            button.grid(row=current_row, column=current_column, padx=10, pady=20)
+
+            # Move to the next column after creating a button
+            current_column += 1
+
+            # If all columns in a row are filled, move to the next row and reset column
+            if current_column >= column_count:
+                current_column = 0
+                current_row += 1
+
+    # Function executed when an ingredient button is clicked
+    def on_input_click(id_input, input_name, input_description):
+        print(f"Insumo seleccionado: {id_input} - {input_name} - {input_description}")
+        
+        # Pop-up para ingresar la cantidad del insumo seleccionado
+        popup = Toplevel()
+        popup.title("Cantidad")
+        popup.geometry("300x150")
+
+        Label_Cantidad = Label(popup, text="Cantidad") 
+        Label_Cantidad.pack(pady=5)
+
+        entry_cantidad = Entry(popup)
+        entry_cantidad.pack(pady=5)
+        entry_cantidad.insert(0, "1")  # Default quantity
+        
+        def confirmar_seleccion():
+            cantidad = entry_cantidad.get()
+            try:
+                cantidad = int(cantidad)
+            except ValueError:
+                print("Por favor, ingresa una cantidad válida.")
+                return
+            
+            selected_inputs.append({
+                "id": id_input,  
+                "name": input_name,
+                "cantidad": cantidad,
+            })
+            popup.destroy()
+            update_checkout_list()
+
+        btn_confirm = Button(popup, text="Añadir al carrito", command=confirmar_seleccion)
+        btn_confirm.pack(pady=10)
+
+
+    # Scrollable canvas for the ingredients frame
     Canvas_scrollbar = Canvas(ingredients_frame)
     Canvas_scrollbar.pack(side=LEFT, fill=BOTH, expand=True)
     inner_frame = Frame(Canvas_scrollbar)
@@ -310,25 +438,95 @@ def Add_Ingredients():
 
     ScrollBar_Products = Scrollbar(Canvas_scrollbar, orient=VERTICAL, command=Canvas_scrollbar.yview)
     ScrollBar_Products.pack(side=RIGHT, fill=Y)
-    Canvas_scrollbar.config(yscrollcommand = ScrollBar_Products.set)
+    Canvas_scrollbar.config(yscrollcommand=ScrollBar_Products.set)
 
     def configure_scrollregion(event):
         Canvas_scrollbar.configure(scrollregion=Canvas_scrollbar.bbox("all"))
 
     Canvas_scrollbar.bind("<Configure>", configure_scrollregion)
 
-    #Customize Checkout_frame----------------------------------------
+    # Customize Checkout_frame
     Checkout_Label = Label(list_frame, text="Ingredientes", font=("Playfair Display", 10), bg="white", fg="black", width=300)
     Checkout_Label.place(x=135, y=10, anchor="center", relwidth=1, height=10)
 
-    Atributtes_Label = Label(list_frame, text="      Nombre          Cantidad", font=("Arial", 8), bg="#d4d9d6", fg="black")
+    Atributtes_Label = Label(list_frame, text="      Nombre                         Cantidad     ", font=("Arial", 8), bg="#d4d9d6", fg="black")
     Atributtes_Label.place(x=310, y=30, anchor="e", width=420, height=15)
 
-    #Configure Combobox----------------------------------------------------------------------
-    employee_label = Label(ai, text="Producto", font=("Arial Black", 10), bg="#C9C9C9", fg="black")
-    employee_label.place(x=745, y=35)
-    employee_combobox = Entry(ai)
-    employee_combobox.place(x=830, y=35)
+    # Frame to show selected products in the checkout
+    checkout_list_frame = Frame(list_frame, bg="white")
+    checkout_list_frame.place(x=15, y=50, width=350, height=300)
+
+    # Function to update the visual list of selected products
+    def update_checkout_list():
+        for widget in checkout_list_frame.winfo_children():
+            widget.destroy()
+
+        for index, product in enumerate(selected_inputs):
+            product_label = Label(
+                checkout_list_frame,
+                text=f"{product['name']:15} {product['cantidad']}",
+                font=("Arial", 10), bg="white", fg="black"
+            )
+            product_label.grid(row=index, column=0, sticky="w")
+
+            modify_button = Button(checkout_list_frame, text="Modificar", command=lambda idx=index: modify_quantity(idx))
+            modify_button.grid(row=index, column=1, padx=5, pady=3)
+            
+            delete_button = Button(checkout_list_frame, text="Eliminar", command=lambda idx=index: delete_product(idx))
+            delete_button.grid(row=index, column=2, padx=5, pady=3)
+
+    # Function to modify the quantity of a product
+    def modify_quantity(index):
+        popup = Toplevel()
+        popup.title("Modificar cantidad")
+        popup.geometry("300x150")
+
+        Label(popup, text="Nueva cantidad:").pack(pady=5)
+        entry_cantidad = Entry(popup)
+        entry_cantidad.pack(pady=5)
+        entry_cantidad.insert(0, str(selected_inputs[index]["cantidad"]))
+
+        def confirmar_cambio():
+            try:
+                nueva_cantidad = int(entry_cantidad.get())
+                if nueva_cantidad > 0:
+                    selected_inputs[index]["cantidad"] = nueva_cantidad
+                    update_checkout_list()
+                popup.destroy()
+            except ValueError:
+                print("Por favor, ingrese un número válido.")
+
+        confirmar_button = Button(popup, text="Confirmar", command=confirmar_cambio)
+        confirmar_button.pack(pady=10)
+
+    # Function to delete a product
+    def delete_product(index):
+        del selected_inputs[index]
+        update_checkout_list()
+
+    # Load inputs and create buttons
+    inputs = get_inputs()
+    create_inputs_buttons(inputs, inner_frame)
+
+
+def obtener_id_producto_por_nombre(nombre):
+    """Obtiene el id_producto a partir del nombre."""
+    try:
+        conn = pyodbc.connect('DRIVER={SQL SERVER};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123')
+        cursor = conn.cursor()
+        cursor.execute("SELECT id_producto FROM productos WHERE nombre = ?", nombre)
+        result = cursor.fetchone()
+        cursor.close()
+        conn.close()
+
+        if result:
+            return result[0]  # Regresa el id_empleado
+        else:
+            messagebox.showerror("Error", "Empleado no encontrado")
+            return None
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al obtener el ID del empleado: {e}")
+        return None
 
 
 # Function to open edit product window
@@ -340,7 +538,13 @@ def Edit_ProductWindow():
 
     item = product_tree.item(selected_item)
     values = item["values"]
+    nombre_producto = values[1]
+    id_producto = obtener_id_producto_por_nombre(nombre_producto)
 
+    if id_producto is None: 
+        return 
+
+    load_products()
     ep = Toplevel(rgp)
     ep.geometry("300x350")
     ep.configure(bg="white")
@@ -349,56 +553,78 @@ def Edit_ProductWindow():
 
     def Aceptar_ButtonAction():
         # Obtener los valores modificados por el usuario
-        id_producto = values[0]
-        category = Category_combobox.get()
+        category_selected = Category_combobox.get()
+        id_category = category_dict.get(category_selected, None)
         nombre = Name_Box.get()
         descripcion = Description_Box.get()
         costo = float(Precio_Box.get())
-        existencia = Existence_Box.get()
+        load_products()
 
         # Actualizar la información en la base de datos (simulado)
         try:
             conn = pyodbc.connect('DRIVER={SQL SERVER};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123')
             cursor = conn.cursor()
-            cursor.execute("EXEC modProducto ?, ?, ?, ?", id_producto, nombre, descripcion, costo)
+            cursor.execute("EXEC modProducto ?, ?, ?, ?, ?", id_producto, id_category, nombre, descripcion, costo)
             conn.commit()
             cursor.close()
             conn.close()
+            load_products()
 
             # Actualizar la información en la tabla
             product_tree.item(selected_item, values=(id_producto, nombre, descripcion, costo))
+            load_products()
             ep.destroy()
         except Exception as e:
             messagebox.showerror("Error", f"Error al actualizar el producto: {e}")
-    ID_Product_Label = Label(ep, text="ID Producto", fg="black", bg="white", font=("Arial Black", 9))
-    ID_Product_Label.place(x=28, y=31)
-    ID_Product_Value = Label(ep, text="01", fg="black", bg="lightgray", font=("Arial Black", 9), width=10)
-    ID_Product_Value.place(x=115, y=35)
-
+    
     Category_Labael = Label(ep, text="Categoria", fg="black", bg="white", font=("Arial Black", 9))
-    Category_Labael.place(x=30, y=72)
+    Category_Labael.place(x=30, y=30)
     Category_combobox = ttk.Combobox(ep, width=20)
-    Category_combobox.place(x=115, y=72) 
+    Category_combobox.place(x=115, y=35)
+    Category_combobox.set(values[0])
+    
+    # Cargar categoria con ID en el ComboBox
+    def load_categories_combobox():
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            cursor.execute("EXEC mostrarCategorias")
+            rows = cursor.fetchall()
 
+            #Crear diccionario para almacenar {nombre: id}
+            category_dict = {row[1]: row[0] for row in rows} # row[0]: id_categoria, row[1]: nombre de la categoria
+            Category_combobox['values'] = list(category_dict.keys()) #Mostrar nombre de los puestos
+            cursor.close()
+            conn.close()
+            return category_dict
+        except Exception as e:
+            messagebox.showerror("Error", f"Error al cargar los puestos en ComboBox: {e}")
+
+    # Llamar a la función para cargar los puestos en el ComboBox
+    category_dict = load_categories_combobox()
+    
     Name_Label = Label(ep, text="Nombre", fg="black", bg="white", font=("Arial Black", 9))
-    Name_Label.place(x=30, y=100)
+    Name_Label.place(x=30, y=75)
     Name_Box = Entry(ep, width=20, bg="lightgray" )
-    Name_Box.place(x=115, y=105)
+    Name_Box.place(x=115, y=75)
+    Name_Box.insert(0, values[1])
 
     Description_Label = Label(ep, text="Descripcion", fg="black", bg="white", font=("Arial Black", 9))
-    Description_Label.place(x=30, y=135)
+    Description_Label.place(x=30, y=115)
     Description_Box = Entry(ep, width=20, bg="lightgray" )
-    Description_Box.place(x=115, y=135)
+    Description_Box.place(x=115, y=115)
+    Description_Box.insert(0, values[2])
 
     Precio_Label = Label(ep, text="Costo $", fg="black", bg="white", font=("Arial Black", 9))
-    Precio_Label.place(x=30, y=165)
+    Precio_Label.place(x=30, y=155)
     Precio_Box = Entry(ep, width=5, bg="lightgray" )
-    Precio_Box.place(x=115, y=165)
+    Precio_Box.place(x=115, y=155)
+    Precio_Box.insert(0, values[3])
     
     Existence_Label = Label(ep, text="Existencia ", fg="black", bg="white", font=("Arial Black", 9))
-    Existence_Label.place(x=30, y=192)
-    Existence_Box = Entry(ep, width=5, bg="lightgray" )
-    Existence_Box.place(x=115, y=192)
+    Existence_Label.place(x=30, y=200)
+    Existence_Box = Label(ep, text=values[4], fg="black", bg="white", font=("Arial Black", 9))
+    Existence_Box.place(x=115, y=200)
 
     Aceptar_Button = Button(ep, text="Aceptar", bg="green", fg="black", font=("Arial Black", 9), command=Aceptar_ButtonAction)
     Aceptar_Button.place(x=30, y=240)
@@ -432,6 +658,44 @@ def Delete_Product():
         messagebox.showinfo("Éxito", "Producto marcado como inactivo correctamente.")
     except Exception as e:
         messagebox.showerror("Error", f"Error al marcar el producto como inactivo: {e}")
+
+#Load employees inactives to show---------------------------------------------------
+def load_productInactive():
+    try:
+        # Limpia el TreeView antes de recargar los registros
+        product_tree.delete(*product_tree.get_children())
+
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("EXEC mostrar_productos_inactivos")
+        rows = cursor.fetchall()
+        # Concatenate names directly in the loop for efficiency
+        for row in rows:
+            formatted_row = ( 
+                row[2], 
+                row[1], 
+                row[3], 
+                f"{row[4]:.2f}", 
+                row[5])
+            product_tree.insert("", "end", values=formatted_row)
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al cargar los productos inactivos: {e}")
+
+# Evento para la casilla de verificación
+def toggle_product_inactive():
+    if show_inactives_var.get():
+        load_productInactive()  # Cargar productos inactivos
+    else:
+        load_products()  # Cargar productos activos
+
+# Variable para la casilla de verificación
+show_inactives_var = BooleanVar()
+
+# Casilla de verificación para mostrar productos inactivos
+show_inactives_check = Checkbutton(rgp, text="Mostrar productos inactivos", variable=show_inactives_var, bg="white", command=toggle_product_inactive)
+show_inactives_check.place(x=20, y=90)
 
 Add_Product = Button(rgp, text="Agregar producto", fg="black", bg="#CE7710", command=Add_Normal_Product_Window, font=("Arial Black", 9))
 Add_Product.place(x=30, y=120)

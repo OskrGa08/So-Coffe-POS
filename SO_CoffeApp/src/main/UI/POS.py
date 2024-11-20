@@ -5,6 +5,7 @@ from tkinter import *
 from tkinter import Scrollbar
 from tkinter import Menubutton
 from tkinter import ttk
+from tkinter import messagebox
 from tkinter.ttk import Combobox
 import pyodbc
 from PIL import Image, ImageTk
@@ -38,46 +39,52 @@ products_frame.place(x=30, y=60, width=700, height=450)
 checkout_frame.place(x=745, y=60, width=370, height=450)
 bar_frame.place(x=0, y=0, relwidth=1, height=30)
 
-#Logic CancelOrder_Button-------------------------------------
-#
-#
-#
-#
-
-#Logic HoldOrder_Button
-#
-#
-#
-#
-#
-
-#Buttons and Labels main window
-CancelOrder_Button = Button(text="Cancelar Orden", font=("Katibeh",15), fg="red", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="red")
-CancelOrder_Button.config(bg=mw.cget('bg'))
-CancelOrder_Button.place(x=220, y=550, anchor="center", width=200)
-
-HoldOrder_Button = Button(text="Completar Orden", font=("Katibeh",15), fg="green", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="green")
-HoldOrder_Button.config(bg=mw.cget('bg'))
-HoldOrder_Button.place(x=440, y=550, anchor="center", width=200)
-
 #Logica de los command para que habra resectivas ventanas cada opcion(abrir las ventanas respectivas a cada gestionar)---------------------------------------
-# arreglar para poder navegar entre ventanas
-def logout():
-    mw.destroy()
-    from LogIn import logIn
-    logIn()
-
 def managEmployees():
+    mw.destroy()
     from Employees import Employees
     Employees()
 
+def managInputs():
+    mw.destroy()
+    from Inputs import Inputs
+    Inputs()
+
+def managOutPuts():
+    mw.destroy()
+    from OutPuts import OutPuts
+    OutPuts()
+
+def managPosition():
+    mw.destroy()
+    from Position import Position
+    Position()
+
+def managProductCategory():
+    mw.destroy()
+    from ProductCategory import ProductCategory
+    ProductCategory()
+
 def managProducts():
+    mw.destroy()
     from Products import Products 
     Products()
 
+def managSells():
+    mw.destroy()
+    from Sells import Sells 
+    Sells()
+
+def managShopping():
+    mw.destroy()
+    from Shopping import Shopping
+    Shopping()
+
 def  managSupplier():
+    mw.destroy()
     from Suppliers import Suppliers 
     Suppliers()
+
 #Option menu bar frame----------------------------------------------------------
 
 # Load the image using PIL
@@ -94,8 +101,6 @@ MenuButton_barFrame.menu.add_command(label="Gestion de empleados", foreground="w
 MenuButton_barFrame.menu.add_command(label="Gestion de proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
 MenuButton_barFrame.menu.add_command(label="Gestion de productos", foreground="white", font=("New Times Roman", 12), command= managProducts)
 MenuButton_barFrame.menu.add_command(label="Gestion de usuarios", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame.menu.add_separator()
-MenuButton_barFrame.menu.add_command(label="Cerrar Sesion", foreground="black", font=("New Times Roman", 12), command=logout)
 MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
 
 #Bar_list search product------------------------------------------------
@@ -139,6 +144,7 @@ product_combobox.place(x=30, y=33)
 def get_db_connection():
     conn = pyodbc.connect('DRIVER={SQL Server};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123;')
     return conn
+
 #Method get products to show in scroll_bar_frame
 def get_active_products():
     conn = get_db_connection()  
@@ -150,7 +156,7 @@ def get_active_products():
     try:
         cursor.execute("EXEC mostrar_productos_activos")  # Call the stored procedure
         for row in cursor:
-            products.append({"nombre": row[1], "Descripcion": row[2],  "costo": row[3]})  # Assuming the procedure returns name and price
+            products.append({"id_producto": row[0], "nombre": row[1], "Descripcion": row[3],  "costo": row[4]})  # Assuming the procedure returns name and price
     finally:
         if conn:
             conn.close()
@@ -169,8 +175,8 @@ def create_product_buttons(products, inner_frame):
 
         button = Button(
             inner_frame,
-            text=f"{product_name} \n {product_description} \n ${product_price:.2f}",
-            command=partial(on_product_click, product_name, product_description, product_price),
+            text=f"{product_name} \n {product_description} \n ${product_price}",
+            command=partial(on_product_click, product["id_producto"] ,product_name, product_description, product_price),
             width=20  # Set button width
         )
 
@@ -184,8 +190,9 @@ def create_product_buttons(products, inner_frame):
         if current_column >= column_count:
             current_column = 0
             current_row += 1
-def on_product_click(product_name, product_description, product_price):
-    print(f"Producto seleccionado: {product_name} - Precio: ${product_price:.2f} - Descripción: {product_description}")  # Replace with your desired action
+
+def on_product_click(id_producto, product_name, product_description, product_price):
+    print(f"Producto seleccionado: {id_producto} -  {product_name} - Precio: ${product_price:.2f} - Descripción: {product_description}")  # Replace with your desired action
 
     #Agregar cantidad del producto 
     popup = Toplevel()
@@ -211,10 +218,11 @@ def on_product_click(product_name, product_description, product_price):
         
         importe = Decimal(product_price) * Decimal(cantidad)  # Asegura que importe sea Decimal
         selected_products.append({
+            "id_producto": id_producto,  # Agregar esta línea
             "name": product_name,
-            "price": float(product_price),  # Convertir a float para mantener consistencia
+            "price": float(product_price),
             "cantidad": cantidad,
-            "importe": float(importe)  # Convertir importe a float para evitar errores
+            "importe": float(importe)
         })
 
         # Actualizar el total usando floats
@@ -301,7 +309,7 @@ def update_checkout_list():
         delete_button = Button(checkout_list_frame, text="Eliminar", command=lambda idx=index: delete_product(idx))
         delete_button.grid(row=index, column=2, padx=5, pady=3)
 
-    total_label.config(text=f"Total: ${total_price:.2f}")
+    #total_label.config(text=f"Total: ${total_price:.2f}")
 
 
 # Función para modificar la cantidad de un producto
@@ -337,10 +345,82 @@ def delete_product(index):
 #Configure Combobox----------------------------------------------------------------------
 employee_label = Label(mw, text="Empleado", font=("Arial Black", 10), bg="#C9C9C9", fg="black")
 employee_label.place(x=745, y=35)
-employee_combobox = Entry(mw)
+employee_combobox = ttk.Combobox(mw, width=20)
 employee_combobox.place(x=830, y=35)
 
+def load_Employees_combobox():
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("EXEC mostrar_empleados_activos")
+        rows = cursor.fetchall()
 
+        #Crear diccionario para almacenar {nombre: id}
+        employee_dict = {row[2]: row[0] for row in rows} # row[0]: id_categoria, row[1]: nombre de la categoria
+        employee_combobox['values'] = list(employee_dict.keys()) #Mostrar nombre de los puestos
+        cursor.close()
+        conn.close()
+        return employee_dict
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al cargar los empleados en ComboBox: {e}")
+
+# Llamar a la función para cargar los empleados en el ComboBox
+employee_dict = load_Employees_combobox()
+
+#Logic HoldOrder_Button
+def addSell_DetailSell():
+    try: 
+        employee_selected = employee_combobox.get()
+        id_empleado = employee_dict.get(employee_selected, None)
+        total_venta = total_price
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Llamar al procedimiento almacenado para insertar la venta
+        cursor.execute("EXEC addVenta @id_empleado=?, @total=?", id_empleado, total_venta)
+        id_venta = cursor.execute("SELECT TOP 1 id_venta FROM ventas ORDER BY id_venta DESC").fetchval()
+        print(id_venta)
+        if id_venta is None:
+            raise Exception("No se pudo obtener el id_venta. Verifique la inserción en la tabla Ventas.")
+
+        # Insertar cada producto del carrito usando el procedimiento almacenado addDetalleVenta
+        for item in selected_products:
+            cursor.execute(
+                "EXEC addDetalleVenta @id_venta=?, @id_producto=?, @cantidad=?, @subtotal=?",
+                id_venta, item["id_producto"], item["cantidad"], item["importe"]
+            )
+        # Confirmar la transacción
+        conn.commit()
+        messagebox.showinfo("Exito", "Venta y Detalle Venta añadidos con exito")
+
+        selected_products.clear()
+        global total_label
+        total_label = 0.0
+        update_checkout_list()
+        total_label.config(text="Total: $0.00")
+
+        
+        return id_venta
+    except Exception as e:
+        print(f"Error durante la transacción: {e}")
+    finally:
+        conn.close()
+
+#Logic CancelOrder_Button-------------------------------------
+#
+#
+#
+#
+
+
+#Buttons and Labels main window
+CancelOrder_Button = Button(text="Cancelar Orden", font=("Katibeh",15), fg="red", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="red")
+CancelOrder_Button.config(bg=mw.cget('bg'))
+CancelOrder_Button.place(x=220, y=550, anchor="center", width=200)
+
+HoldOrder_Button = Button(text="Completar Orden", font=("Katibeh",15), fg="green", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="green", command=addSell_DetailSell)
+HoldOrder_Button.config(bg=mw.cget('bg'))
+HoldOrder_Button.place(x=440, y=550, anchor="center", width=200)
 #END----------------------------
 mw.mainloop()
 
