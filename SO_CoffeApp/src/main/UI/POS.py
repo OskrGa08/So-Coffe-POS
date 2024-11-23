@@ -309,7 +309,7 @@ def update_checkout_list():
         delete_button = Button(checkout_list_frame, text="Eliminar", command=lambda idx=index: delete_product(idx))
         delete_button.grid(row=index, column=2, padx=5, pady=3)
 
-    #total_label.config(text=f"Total: ${total_price:.2f}")
+    total_label.config(text=f"Total: ${total_price:.2f}")
 
 
 # Función para modificar la cantidad de un producto
