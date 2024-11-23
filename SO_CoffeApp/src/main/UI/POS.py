@@ -95,7 +95,7 @@ MenuButton_barFrame.place(x=0, y=0)
 MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
 MenuButton_barFrame.menu.add_command(label="Configurar pa que salga el usuario", foreground="black", font=("New Times Roman", 12))
 MenuButton_barFrame.menu.add_separator()
-MenuButton_barFrame.menu.add_command(label="Gestion de ventas", foreground="white", font=("New Times Roman", 12))#
+MenuButton_barFrame.menu.add_command(label="Gestion de ventas", foreground="white", font=("New Times Roman", 12), command=managSells)#
 MenuButton_barFrame.menu.add_command(label="Gestion de compras", foreground="white", font=("New Times Roman", 12))#
 MenuButton_barFrame.menu.add_command(label="Gestion de empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
 MenuButton_barFrame.menu.add_command(label="Gestion de proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
@@ -394,8 +394,6 @@ def addSell_DetailSell():
         messagebox.showinfo("Exito", "Venta y Detalle Venta añadidos con exito")
 
         selected_products.clear()
-        global total_label
-        total_label = 0.0
         update_checkout_list()
         total_label.config(text="Total: $0.00")
 

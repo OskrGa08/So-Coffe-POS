@@ -34,7 +34,7 @@ topBar_frame = Frame(mw, bg="#CE7710")
 topBar_frame.place(x=0, y=0, relwidth=1, height=30)
 
 #Frames--------------------------------------------------
-detail_Frame = Frame(mw, bg="grey")
+detail_Frame = Frame(mw, bg="#D2D2D2")
 detail_Frame.place(x=545, y=60, width=270, height=450)
 
 
@@ -166,11 +166,11 @@ def on_select_output(event):
         detalles = cursor.fetchall()
         
         # Mostrar los detalles en el frame
-        Label(detail_Frame, text="Detalles de la Salida", bg="grey", font=("Arial Black", 10)).pack(pady=5)
+        Label(detail_Frame, text="Detalles de la Salida", bg="#D2D2D2", font=("Arial Black", 10)).pack(pady=5)
         
         for detalle in detalles:
             texto = f"Insumo: {detalle[0]}, Cantidad: {detalle[1]}"
-            Label(detail_Frame, text=texto, bg="grey", anchor="w").pack(fill="x", padx=10, pady=2)
+            Label(detail_Frame, text=texto, bg="#D2D2D2", anchor="w").pack(fill="x", padx=10, pady=2)
         
         cursor.close()
         conn.close()

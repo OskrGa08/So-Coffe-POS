@@ -516,17 +516,19 @@ def obtener_id_producto_por_nombre(nombre):
         cursor = conn.cursor()
         cursor.execute("SELECT id_producto FROM productos WHERE nombre = ?", nombre)
         result = cursor.fetchone()
+        print(f"Resultado obtenido de la BD: {result}")
         cursor.close()
         conn.close()
 
         if result:
-            return result[0]  # Regresa el id_empleado
+            return result[0]  # Retorna solo el valor de la primera columna
         else:
-            messagebox.showerror("Error", "Empleado no encontrado")
+            messagebox.showerror("Error", "Producto no encontrado")
             return None
     except Exception as e:
-        messagebox.showerror("Error", f"Error al obtener el ID del empleado: {e}")
+        messagebox.showerror("Error", f"Error al obtener el ID del producto: {e}")
         return None
+
 
 
 # Function to open edit product window
@@ -571,11 +573,12 @@ def Edit_ProductWindow():
             load_products()
 
             # Actualizar la información en la tabla
-            product_tree.item(selected_item, values=(id_producto, nombre, descripcion, costo))
+            #product_tree.item(selected_item, values=(id_producto, nombre, descripcion, costo))
             load_products()
+            messagebox.showinfo("Exito", "Producto Actualizado")
             ep.destroy()
         except Exception as e:
-            messagebox.showerror("Error", f"Error al actualizar el producto: {e}")
+            messagebox.showerror("Actualizado con exito", f"Error al actualizar el producto: {e}")
     
     Category_Labael = Label(ep, text="Categoria", fg="black", bg="white", font=("Arial Black", 9))
     Category_Labael.place(x=30, y=30)
