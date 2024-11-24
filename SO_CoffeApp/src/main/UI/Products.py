@@ -647,12 +647,14 @@ def Delete_Product():
         return
 
     item = product_tree.item(selected_item)
-    ID_producto = item["values"][0]
+    values = item["values"]
+    nombre_producto = values[1]
+    id_producto = obtener_id_producto_por_nombre(nombre_producto)
 
     try:
         conn = get_db_connection()
         cursor = conn.cursor()
-        cursor.execute("EXEC marcar_producto_inactivo @id_producto = ?", ID_producto)
+        cursor.execute("EXEC marcar_producto_inactivo @id_producto = ?", id_producto)
         conn.commit()
         cursor.close()
         conn.close()
@@ -690,8 +692,43 @@ def load_productInactive():
 def toggle_product_inactive():
     if show_inactives_var.get():
         load_productInactive()  # Cargar productos inactivos
+        Active_Product.place(x=840, y=120)
     else:
+        Active_Product.place_forget()
         load_products()  # Cargar productos activos
+
+def active_Product():
+    selected_item = product_tree.selection()
+    if not selected_item:
+        messagebox.showwarning("Advertencia", "Seleccione un producto para Activar")
+        return
+
+    confirm = messagebox.askyesno("Confirmar", "¿Está seguro de que desea activar este producto?")
+    if not confirm:
+        return
+
+    item = product_tree.item(selected_item)
+    values = item["values"]
+    item = product_tree.item(selected_item)
+    nombre_producto = values[1]  
+    
+    # Obtener el id_empleado usando el RFC
+    id_producto = obtener_id_producto_por_nombre(nombre_producto)
+    if id_producto is None:
+        return  # Si no se encuentra el ID, no continuar con la edición
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("EXEC marcar_producto_activo @id_producto = ?", id_producto)
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        product_tree.delete(selected_item)
+        messagebox.showinfo("Éxito", "Producto marcado como activo correctamente.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al marcar el producto como activo: {e}")
+
 
 # Variable para la casilla de verificación
 show_inactives_var = BooleanVar()
@@ -711,6 +748,9 @@ Edit_Product.place(x=610, y=120)
 
 Delete_Product = Button(rgp, text="Desactivar Producto", fg="black", bg="#CE7710", command=Delete_Product, font=("Arial Black", 9))
 Delete_Product.place(x=840, y=120)
+
+Active_Product = Button(rgp, text="Activar Producto", fg="black", background="#CE7710", command=active_Product, font=("Arial Black", 9))
+Active_Product.config(width=20)
 
 load_products()
 rgp.mainloop()

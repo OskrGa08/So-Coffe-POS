@@ -177,7 +177,8 @@ def create_product_buttons(products, inner_frame):
             inner_frame,
             text=f"{product_name} \n {product_description} \n ${product_price}",
             command=partial(on_product_click, product["id_producto"] ,product_name, product_description, product_price),
-            width=20  # Set button width
+            width=20,  # Set button width
+            bg="white"
         )
 
         # Use grid layout manager for positioning
@@ -240,6 +241,7 @@ def on_product_click(id_producto, product_name, product_description, product_pri
 Canvas_scrollbar = Canvas(products_frame)
 Canvas_scrollbar.pack(side=LEFT, fill=BOTH, expand=True)
 inner_frame = Frame(Canvas_scrollbar)
+inner_frame.config(background="white")
 Canvas_scrollbar.create_window((0, 0), window=inner_frame, anchor="nw")
 
 ScrollBar_Products = Scrollbar(Canvas_scrollbar, orient=VERTICAL, command=Canvas_scrollbar.yview)
@@ -258,10 +260,10 @@ create_product_buttons(products, inner_frame)
 
 #Customize Checkout_frame----------------------------------------
 Checkout_Label = Label(checkout_frame, text="Cuenta", font=("Playfair Display", 10), bg="white", fg="black", width=300)
-Checkout_Label.place(x=135, y=10, anchor="center", relwidth=1, height=10)
+Checkout_Label.place(x=135, y=10, anchor="center", relwidth=1, height=20)
 
-Atributtes_Label = Label(checkout_frame, text="      Nombre            Precio   QYT   Importe", font=("Arial", 8), bg="#d4d9d6", fg="black")
-Atributtes_Label.place(x=310, y=30, anchor="e", width=420, height=15)
+Atributtes_Label = Label(checkout_frame, text="Nombre   Precio   QYT   Importe", font=("Arial", 9), bg="#d4d9d6", fg="black")
+Atributtes_Label.place(x=370, y=30, anchor="e", width=500, height=15)
 
 selected_products = []
 total_price = 0.0

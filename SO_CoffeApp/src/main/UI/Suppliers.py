@@ -334,8 +334,11 @@ def load_suppliersInactive():
 def toggle_inactive_suppliers():
     if show_inactives_var.get():
         load_suppliersInactive()  # Cargar proveedores inactivos
+        Active_Supplier.place(x=640, y=120)
     else:
+        Active_Supplier.place_forget()
         load_suppliers()  # Cargar proveedores activos
+        
 
 # Función para cargar empleados según el criterio de búsqueda
 def load_suppliers_filter(query=None):
@@ -367,12 +370,45 @@ def load_suppliers_filter(query=None):
         conn.close()
 
     except Exception as e:
-        messagebox.showerror("Error", f"Error al cargar los empleados: {e}")
+        messagebox.showerror("Error", f"Error al cargar los proveedores: {e}")
 
 # Función para manejar el botón de búsqueda
 def search_suppliers():
     query = search_entry.get()  # Obtener texto de búsqueda
     load_suppliers_filter(query=query)
+
+def active_Employee():
+    selected_item = supplier_tree.selection()
+    if not selected_item:
+        messagebox.showwarning("Advertencia", "Seleccione un proveedor para Activar")
+        return
+
+    confirm = messagebox.askyesno("Confirmar", "¿Está seguro de que desea activar este proveedor?")
+    if not confirm:
+        return
+
+    item = supplier_tree.item(selected_item)
+    values = item["values"]
+    item = supplier_tree.item(selected_item)
+    # Obtener el RFC del empleado seleccionado (suponiendo que es el valor en el índice 4)
+    rfc_supplier = values[2]  # Ajusta según el índice correcto de RFC
+    
+    # Obtener el id_proveedor usando el RFC
+    id_proveedor = obtener_id_proveedor_por_rfc(rfc_supplier)
+    if id_proveedor is None:
+        return  # Si no se encuentra el ID, no continuar con la edición
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("EXEC marcar_proveedor_activo @id_proveedor = ?", id_proveedor)
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        supplier_tree.delete(selected_item)
+        messagebox.showinfo("Éxito", "Proveedor marcado como activo correctamente.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al marcar el proveedor como activo: {e}")
 
 
 #Buttons----------------------------------
@@ -398,6 +434,8 @@ Edit_Supplier.place(x=440, y=120)
 Delete_Supplier = Button(rprov, text="Desactivar Proveedor", fg="black", bg="#CE7710", command=Delete_Supplier, font=("Arial Black", 9))
 Delete_Supplier.place(x=640, y=120)
 
+Active_Supplier = Button(rprov, text="Activar Proveedor", fg="black", background="#CE7710", command=active_Employee, font=("Arial Black", 9))
+Active_Supplier.config(width=20)
 
 #END--------------------------------------------------
 rprov.mainloop()

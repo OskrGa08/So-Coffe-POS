@@ -396,9 +396,9 @@ def Delete_Employee():
         conn.close()
 
         employee_tree.delete(selected_item)
-        messagebox.showinfo("Éxito", "Producto marcado como inactivo correctamente.")
+        messagebox.showinfo("Éxito", "Empleado marcado como inactivo correctamente.")
     except Exception as e:
-        messagebox.showerror("Error", f"Error al marcar el producto como inactivo: {e}")
+        messagebox.showerror("Error", f"Error al marcar el empleado como inactivo: {e}")
 
 #Load employees inactives to show---------------------------------------------------
 def load_employeeInactive():
@@ -430,7 +430,9 @@ def load_employeeInactive():
 def toggle_inactive_employees():
     if show_inactives_var.get():
         load_employeeInactive()  # Cargar empleados inactivos
+        Active_Emplooyee.place(x=1070, y=120)
     else:
+        Active_Emplooyee.place_forget()
         load_employees()  # Cargar empleados activos
 
 
@@ -484,7 +486,38 @@ def search_employees():
     query = search_entry.get()  # Obtener texto de búsqueda
     load_employees_filter(query=query)
 
+def active_Employee():
+    selected_item = employee_tree.selection()
+    if not selected_item:
+        messagebox.showwarning("Advertencia", "Seleccione un empleado para Activar")
+        return
 
+    confirm = messagebox.askyesno("Confirmar", "¿Está seguro de que desea activar este empleado?")
+    if not confirm:
+        return
+
+    item = employee_tree.item(selected_item)
+    values = item["values"]
+    item = employee_tree.item(selected_item)
+    # Obtener el RFC del empleado seleccionado (suponiendo que es el valor en el índice 4)
+    rfc_empleado = values[4]  # Ajusta según el índice correcto de RFC
+    
+    # Obtener el id_empleado usando el RFC
+    id_empleado = obtener_id_empleado_por_rfc(rfc_empleado)
+    if id_empleado is None:
+        return  # Si no se encuentra el ID, no continuar con la edición
+    try:
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("EXEC marcar_empleado_activo @id_empleado = ?", id_empleado)
+        conn.commit()
+        cursor.close()
+        conn.close()
+
+        employee_tree.delete(selected_item)
+        messagebox.showinfo("Éxito", "Empleado marcado como activo correctamente.")
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al marcar el empleado como activo: {e}")
 
 #Buttons----------------------------------
 # Barra de búsqueda
@@ -509,6 +542,9 @@ Edit_Product.place(x=690, y=120)
 
 Delete_Product = Button(remp, text="Desactivar Empleado", fg="black", bg="#CE7710", command=Delete_Employee, font=("Arial Black", 9))
 Delete_Product.place(x=1070, y=120)
+
+Active_Emplooyee = Button(remp, text="Activar Empleado", fg="black", background="#CE7710", command=active_Employee, font=("Arial Black", 9))
+Active_Emplooyee.config(width=20)
 
 
 #END--------------------------------------------------
