@@ -136,7 +136,7 @@ def on_select_output(event):
         return  # Si no hay selección, salir
 
     item = sh_tree.item(selected_item)
-    venta_id = item["values"][0]  # El ID está en la primera columna
+    compra_id = item["values"][0]  # El ID está en la primera columna
 
     # Limpiar el frame de detalles
     for widget in detail_Frame.winfo_children():
@@ -147,15 +147,15 @@ def on_select_output(event):
         conn = get_db_connection()
         cursor = conn.cursor()
         
-        # Ejecutar el procedimiento almacenado con el ID de la venta
-        cursor.execute("EXEC obtenerDetalleCompra ?", venta_id)
+        # Ejecutar el procedimiento almacenado con el ID de la compra
+        cursor.execute("EXEC obtenerDetalleCompra ?", compra_id)
         detalles = cursor.fetchall()
         
         # Mostrar los detalles en el frame
         Label(detail_Frame, text="Detalles de la Compra", bg="#D2D2D2", font=("Arial Black", 10)).pack(pady=5)
         
         for detalle in detalles:
-            texto = f"Insumo: {detalle[1]}, Cantidad: {detalle[2]}, Costo: {detalle[3]}"
+            texto = f"Insumo: {detalle[0]}, Cantidad: {detalle[1]}, Costo: {detalle[2]}"
             Label(detail_Frame, text=texto, bg="#D2D2D2", anchor="w").pack(fill="x", padx=10, pady=2)
         
         cursor.close()
