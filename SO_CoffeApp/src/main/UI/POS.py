@@ -378,6 +378,12 @@ def addSell_DetailSell():
         conn = get_db_connection()
         cursor = conn.cursor()
 
+        if not selected_products:
+            messagebox.showwarning("Carrito vacío", "No hay productos en el carrito.")
+
+        if not id_empleado:
+            messagebox.showwarning("Falta el Empleado", "Debe ingresar un empleado.")
+
         # Llamar al procedimiento almacenado para insertar la venta
         cursor.execute("EXEC addVenta @id_empleado=?, @total=?", id_empleado, total_venta)
         id_venta = cursor.execute("SELECT TOP 1 id_venta FROM ventas ORDER BY id_venta DESC").fetchval()
