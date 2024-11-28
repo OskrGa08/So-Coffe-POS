@@ -1,20 +1,17 @@
-from decimal import Decimal
 from functools import partial
 from pathlib import Path
+import pyodbc
 from tkinter import *
 from tkinter import Scrollbar
 from tkinter import Menubutton
-from tkinter import ttk
 from tkinter import messagebox
-from tkinter.ttk import Combobox
-import pyodbc
-from PIL import Image, ImageTk
-import tkinter as tk
+from tkinter import ttk
+from tkinter import PhotoImage
 # Configuration main window--------------------------------------
 mw = Tk()
 mw.geometry("870x620")
 mw.minsize(650, 500)
-mw.maxsize(1024, 580)
+mw.maxsize(1024, 900)
 mw.configure(bg="white")
 mw.title("Salidas")
 # Icon --------------------------
@@ -79,29 +76,42 @@ def managShopping():
     from Shopping import Shopping
     Shopping()
 
+def managShoppingView():
+    mw.destroy()
+    from ShopingView import ShopingView
+    ShopingView()
+
 def  managSupplier():
     mw.destroy()
     from Suppliers import Suppliers 
     Suppliers()
 
+def reports():
+    mw.destroy()
+    from Tries import Tries
+    Tries()
+
 #Option menu bar frame----------------------------------------------------------
 
 # Load the image using PIL
-MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
+#MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
 # Create a label to display the background image
-MenuButton_barFrame = Menubutton(topBar_frame, image=MB_image ,bg="#CE7710", width=30, height=30)
+MenuButton_barFrame = Menubutton(topBar_frame, bg="#CE7710", width=30, height=30)
 MenuButton_barFrame.place(x=0, y=0)
 MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
-MenuButton_barFrame.menu.add_command(label="Gestion de Empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
+MenuButton_barFrame.menu.add_command(label="Gestion de Insumos", foreground="white", font=("New Times Roman", 12), command=managInputs)
 MenuButton_barFrame.menu.add_command(label="Gestion de Insumos", foreground="white", font=("New Times Roman", 12), command=managInputs)
 MenuButton_barFrame.menu.add_command(label="Punto de Venta", foreground="white", font=("New Times Roman", 12), command=pontiOfSale)
 MenuButton_barFrame.menu.add_command(label="Puestos de Empleados", foreground="white", font=("New Times Roman", 12), command=managPosition)
-MenuButton_barFrame.menu.add_command(label="Categorias de Productos", foreground="white", font=("New Times Roman", 12), command= managProductCategory)
+MenuButton_barFrame.menu.add_command(label="Categoria de Productos", foreground="white", font=("New Times Roman", 12), command=managProductCategory)
 MenuButton_barFrame.menu.add_command(label="Gestion de Productos", foreground="white", font=("New Times Roman", 12), command=managProducts)
-MenuButton_barFrame.menu.add_command(label="Gestion de Ventas", foreground="white", font=("New Times Roman", 12), command=managSells)
+MenuButton_barFrame.menu.add_command(label="Vista de Ventas", foreground="white", font=("New Times Roman", 12), command= managSells)
 MenuButton_barFrame.menu.add_command(label="Gestion de Compras", foreground="white", font=("New Times Roman", 12), command=managShopping)
+MenuButton_barFrame.menu.add_command(label="Vista de Compras", foreground="white", font=("New Times Roman", 12), command=managShoppingView)
 MenuButton_barFrame.menu.add_command(label="Gestion de Proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
-MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
+MenuButton_barFrame.menu.add_command(label="Reportes", foreground="white", font=("New Times Roman", 12), command=reports)
+MenuButton_barFrame["menu"] = MenuButton_barFrame.menu
+ 
 
 Main_Label = Label(mw, text="SALIDAS", fg="black", bg="white", font=("Arial Black", 18))
 Main_Label.place(x=200, y=55)

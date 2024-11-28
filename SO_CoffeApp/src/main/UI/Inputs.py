@@ -1,9 +1,11 @@
+from pathlib import Path
 import pyodbc
 from tkinter import *
 from tkinter import Scrollbar
 from tkinter import Menubutton
 from tkinter import messagebox
 from tkinter import ttk
+#### agregar boton que muestre la grafica en esta clase
 
 # Configuration main window---------------------------
 inp = Tk()
@@ -12,6 +14,18 @@ inp.minsize(700, 500)
 inp.maxsize(1500, 580)
 inp.configure(bg="white")
 inp.title("Gestion de Insumos")
+
+# Icon --------------------------
+base_dir = Path(__file__).resolve().parent
+icon_path = base_dir.parent / 'resources' / 'icon sf.ico'
+icon_path_str = str(icon_path)
+if icon_path.exists():
+    try:
+        inp.iconbitmap(icon_path_str)
+    except Exception as e:
+        print(f"Error al cargar el icono: {e}")
+else:
+    print(f"El archivo de icono no se encuentra en la ruta especificada: {icon_path_str}")
 
 #Top Bar-----------------------------------------------
 topBar_frame = Frame(inp, bg="#CE7710")
@@ -53,6 +67,11 @@ def managSells():
     from Sells import Sells 
     Sells()
 
+def managShoppingView():
+    inp.destroy()
+    from ShopingView import ShopingView
+    ShopingView()
+
 def managShopping():
     inp.destroy()
     from Shopping import Shopping
@@ -62,6 +81,11 @@ def  managSupplier():
     inp.destroy()
     from Suppliers import Suppliers 
     Suppliers()
+
+def reports():
+    inp.destroy()
+    from Tries import Tries
+    Tries()
 
 
 # Load the image using PIL
@@ -76,9 +100,11 @@ MenuButton_barFrame.menu.add_command(label="Punto de Venta", foreground="white",
 MenuButton_barFrame.menu.add_command(label="Puestos de Empleados", foreground="white", font=("New Times Roman", 12), command=managPosition)
 MenuButton_barFrame.menu.add_command(label="Categorias de Productos", foreground="white", font=("New Times Roman", 12), command=managProductCategory)
 MenuButton_barFrame.menu.add_command(label="Gestion de Productos", foreground="white", font=("New Times Roman", 12), command= managProducts)
-MenuButton_barFrame.menu.add_command(label="Gestion de Ventas", foreground="white", font=("New Times Roman", 12), command=managSells)
-MenuButton_barFrame.menu.add_command(label="Gestion de Compras", foreground="black", font=("New Times Roman", 12), command=managShopping)
-MenuButton_barFrame.menu.add_command(label="Gestion de Proveedores", foreground="black", font=("New Times Roman", 12), command=managSupplier)
+MenuButton_barFrame.menu.add_command(label="Vista de Ventas", foreground="white", font=("New Times Roman", 12), command=managSells)
+MenuButton_barFrame.menu.add_command(label="Gestion de Compras", foreground="white", font=("New Times Roman", 12), command=managShopping)
+MenuButton_barFrame.menu.add_command(label="Vista de Compras", foreground="white", font=("New Times Roman", 12), command=managShoppingView)
+MenuButton_barFrame.menu.add_command(label="Gestion de Proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
+MenuButton_barFrame.menu.add_command(label="Reportes", foreground="white", font=("New Times Roman", 12), command=reports)
 MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
 
 Main_Label = Label(inp, text="INSUMOS", fg="black", bg="white", font=("Arial Black", 18))

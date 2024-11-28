@@ -30,6 +30,11 @@ def managInputs():
     from Inputs import Inputs
     Inputs()
 
+def managOutPuts():
+    rgp.destroy()
+    from OutPuts import OutPuts
+    OutPuts()
+
 def pontiOfSale():
     rgp.destroy()
     from POS import POS 
@@ -55,10 +60,20 @@ def managShopping():
     from Shopping import Shopping
     Shopping()
 
+def managShoppingView():
+    rgp.destroy()
+    from ShopingView import ShopingView
+    ShopingView()
+
 def  managSupplier():
     rgp.destroy()
     from Suppliers import Suppliers 
     Suppliers()
+
+def reports():
+    rgp.destroy()
+    from Tries import Tries
+    Tries()
 
 # Load the image using PIL
 MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
@@ -68,12 +83,15 @@ MenuButton_barFrame.place(x=0, y=0)
 MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
 MenuButton_barFrame.menu.add_command(label="Gestion de Empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
 MenuButton_barFrame.menu.add_command(label="Gestion de Insumos", foreground="white", font=("New Times Roman", 12), command=managInputs)
+MenuButton_barFrame.menu.add_command(label="Gestion de Salidas", foreground="white", font=("New Times Roman", 12), command=managOutPuts)
 MenuButton_barFrame.menu.add_command(label="Punto de Venta", foreground="white", font=("New Times Roman", 12), command=pontiOfSale)
 MenuButton_barFrame.menu.add_command(label="Puesto de Empleados", foreground="white", font=("New Times Roman", 12), command=managPosition)
 MenuButton_barFrame.menu.add_command(label="Categoria de Productos", foreground="white", font=("New Times Roman", 12), command= managProductCategory)
-MenuButton_barFrame.menu.add_command(label="Gestion de Ventas", foreground="white", font=("New Times Roman", 12), command=managSells)
+MenuButton_barFrame.menu.add_command(label="Vista de Ventas", foreground="white", font=("New Times Roman", 12), command=managSells)
 MenuButton_barFrame.menu.add_command(label="Gestion de Compras", foreground="white", font=("New Times Roman", 12), command=managShopping)
+MenuButton_barFrame.menu.add_command(label="Vista de Compras", foreground="white", font=("New Times Roman", 12), command=managShoppingView)
 MenuButton_barFrame.menu.add_command(label="Gestion de Proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
+MenuButton_barFrame.menu.add_command(label="Reportes", foreground="white", font=("New Times Roman", 12), command=reports)
 MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
 
 Main_Label = Label(rgp, text="PRODUCTOS", fg="black", bg="white", font=("Arial Black", 18))

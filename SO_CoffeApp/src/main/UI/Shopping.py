@@ -42,42 +42,79 @@ checkout_frame.place(x=745, y=60, width=370, height=500)
 bar_frame.place(x=0, y=0, relwidth=1, height=30)
 
 
-#Logica de los command para que habra resectivas ventanas cada opcion(abrir las ventanas respectivas a cada gestionar)---------------------------------------
-# arreglar para poder navegar entre ventanas
-def logout():
+#Methods to nav amoung windows
+def managInputs():
     shp.destroy()
-    from LogIn import logIn
-    logIn()
+    from Inputs import Inputs
+    Inputs()
 
-def managEmployees():
-    from Employees import Employees
-    Employees()
+def managOutPuts():
+    shp.destroy()
+    from OutPuts import OutPuts
+    OutPuts()
+
+def pontiOfSale():
+    shp.destroy()
+    from POS import POS 
+    POS()
+
+def managPosition():
+    shp.destroy()
+    from Position import Position
+    Position()
+
+def managProductCategory():
+    shp.destroy()
+    from ProductCategory import ProductCategory
+    ProductCategory()
 
 def managProducts():
+    shp.destroy()
     from Products import Products 
     Products()
 
+def managSells():
+    shp.destroy()
+    from Sells import Sells 
+    Sells()
+
+def managEmployees():
+    shp.destroy()
+    from Employees import Employees
+    Employees()
+
+def managShoppingView():
+    shp.destroy()
+    from ShopingView import ShopingView
+    ShopingView()
+
 def  managSupplier():
+    shp.destroy()
     from Suppliers import Suppliers 
     Suppliers()
+
+def reports():
+    shp.destroy()
+    from Tries import Tries
+    Tries()
 #Option menu bar frame----------------------------------------------------------
 
-# Load the image using PIL
 MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
 # Create a label to display the background image
 MenuButton_barFrame = Menubutton(bar_frame, image=MB_image ,bg="#CE7710", width=30, height=30)
 MenuButton_barFrame.place(x=0, y=0)
 MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
-MenuButton_barFrame.menu.add_command(label="Configurar pa que salga el usuario", foreground="black", font=("New Times Roman", 12))
-MenuButton_barFrame.menu.add_separator()
-MenuButton_barFrame.menu.add_command(label="Gestion de ventas", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame.menu.add_command(label="Gestion de compras", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame.menu.add_command(label="Gestion de empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
-MenuButton_barFrame.menu.add_command(label="Gestion de proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
-MenuButton_barFrame.menu.add_command(label="Gestion de productos", foreground="white", font=("New Times Roman", 12), command= managProducts)
-MenuButton_barFrame.menu.add_command(label="Gestion de usuarios", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame.menu.add_separator()
-MenuButton_barFrame.menu.add_command(label="Cerrar Sesion", foreground="black", font=("New Times Roman", 12), command=logout)
+MenuButton_barFrame.menu.add_command(label="Gestion de Insumos", foreground="white", font=("New Times Roman", 12), command=managInputs)
+MenuButton_barFrame.menu.add_command(label="Gestion de Salidas", foreground="white", font=("New Times Roman", 12), command=managOutPuts)
+MenuButton_barFrame.menu.add_command(label="Punto de Venta", foreground="white", font=("New Times Roman", 12), command=pontiOfSale)
+MenuButton_barFrame.menu.add_command(label="Puestos de Empleados", foreground="white", font=("New Times Roman", 12), command=managPosition)
+MenuButton_barFrame.menu.add_command(label="Categoria de Productos", foreground="white", font=("New Times Roman", 12), command=managProductCategory)
+MenuButton_barFrame.menu.add_command(label="Gestion de Productos", foreground="white", font=("New Times Roman", 12), command=managProducts)
+MenuButton_barFrame.menu.add_command(label="Vista de Ventas", foreground="white", font=("New Times Roman", 12), command= managSells)
+MenuButton_barFrame.menu.add_command(label="Gestion de Empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
+MenuButton_barFrame.menu.add_command(label="Vista de Compras", foreground="white", font=("New Times Roman", 12), command=managShoppingView)
+MenuButton_barFrame.menu.add_command(label="Gestion de Proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
+MenuButton_barFrame.menu.add_command(label="Reportes", foreground="white", font=("New Times Roman", 12), command=reports)
 MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
 
 #Bar_list search product------------------------------------------------

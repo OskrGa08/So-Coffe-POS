@@ -67,10 +67,21 @@ def managShopping():
     from Shopping import Shopping
     Shopping()
 
+def managShoppingView():
+    sh.destroy()
+    from ShopingView import ShopingView
+    ShopingView()
+
 def  managSupplier():
     sh.destroy()
     from Suppliers import Suppliers 
     Suppliers()
+
+def reports():
+    sh.destroy()
+    from Tries import Tries
+    Tries()
+
 
 # Load the image using PIL
 MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
@@ -86,8 +97,10 @@ MenuButton_barFrame.menu.add_command(label="Categorias de Productos", foreground
 MenuButton_barFrame.menu.add_command(label="Gestion de Productos", foreground="white", font=("New Times Roman", 12), command=managProducts)
 MenuButton_barFrame.menu.add_command(label="Gestion de Salidas", foreground="white", font=("New Times Roman", 12), command=managOutPuts)
 MenuButton_barFrame.menu.add_command(label="Gestion de Compras", foreground="white", font=("New Times Roman", 12), command=managShopping)
+MenuButton_barFrame.menu.add_command(label="Vistas de Compras", foreground="white", font=("New Times Roman", 12), command=managShoppingView)
 MenuButton_barFrame.menu.add_command(label="Gestion de Proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
-MenuButton_barFrame.menu.add_command(label="Gestion de Ventas", foreground="white", font=("New Times Roman", 12), command=managSells)
+MenuButton_barFrame.menu.add_command(label="Vista de Ventas", foreground="white", font=("New Times Roman", 12), command=managSells)
+MenuButton_barFrame.menu.add_command(label="Reportes", foreground="white", font=("New Times Roman", 12), command=reports)
 MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
 
 Main_Label = Label(sh, text="COMPRAS", fg="black", bg="white", font=("Arial Black", 18))

@@ -1,3 +1,4 @@
+from pathlib import Path
 from tkinter import messagebox
 import pyodbc
 from tkinter import *
@@ -10,6 +11,18 @@ remp.minsize(400, 400)
 remp.maxsize(1600, 680)
 remp.configure(bg="white")
 remp.title("Registrar nuevo empleado")
+
+# Icon --------------------------
+base_dir = Path(__file__).resolve().parent
+icon_path = base_dir.parent / 'resources' / 'icon sf.ico'
+icon_path_str = str(icon_path)
+if icon_path.exists():
+    try:
+        remp.iconbitmap(icon_path_str)
+    except Exception as e:
+        print(f"Error al cargar el icono: {e}")
+else:
+    print(f"El archivo de icono no se encuentra en la ruta especificada: {icon_path_str}")
 
 #Top Bar-----------------------------------------------
 topBar_frame = Frame(remp, bg="#CE7710")
@@ -56,12 +69,20 @@ def managShopping():
     from Shopping import Shopping
     Shopping()
 
+def managShoppingView():
+    remp.destroy()
+    from ShopingView import ShopingView
+    ShopingView()
+
 def  managSupplier():
     remp.destroy()
     from Suppliers import Suppliers 
     Suppliers()
 
-
+def reports():
+    remp.destroy()
+    from Tries import Tries
+    Tries()
 
 # Load the image using PIL
 MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
@@ -75,9 +96,11 @@ MenuButton_barFrame.menu.add_command(label="Punto de Venta", foreground="white",
 MenuButton_barFrame.menu.add_command(label="Puestos de Empleados", foreground="white", font=("New Times Roman", 12), command=managPosition)
 MenuButton_barFrame.menu.add_command(label="Categoria de Productos", foreground="white", font=("New Times Roman", 12), command=managProductCategory)
 MenuButton_barFrame.menu.add_command(label="Gestion de Productos", foreground="white", font=("New Times Roman", 12), command=managProducts)
-MenuButton_barFrame.menu.add_command(label="Gestion de Ventas", foreground="white", font=("New Times Roman", 12), command= managSells)
+MenuButton_barFrame.menu.add_command(label="Vista de Ventas", foreground="white", font=("New Times Roman", 12), command= managSells)
 MenuButton_barFrame.menu.add_command(label="Gestion de Compras", foreground="white", font=("New Times Roman", 12), command=managShopping)
+MenuButton_barFrame.menu.add_command(label="Vista de Compras", foreground="white", font=("New Times Roman", 12), command=managShoppingView)
 MenuButton_barFrame.menu.add_command(label="Gestion de Proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
+MenuButton_barFrame.menu.add_command(label="Reportes", foreground="white", font=("New Times Roman", 12), command=reports)
 MenuButton_barFrame["menu"]= MenuButton_barFrame.menu   
 
 Main_Label = Label(remp, text="EMPLEADOS", fg="black", bg="white", font=("Arial Black", 18))

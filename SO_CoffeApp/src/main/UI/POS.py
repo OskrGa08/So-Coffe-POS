@@ -75,15 +75,25 @@ def managSells():
     from Sells import Sells 
     Sells()
 
+def managShoppingView():
+    mw.destroy()
+    from ShopingView import ShopingView
+    ShopingView()
+
 def managShopping():
     mw.destroy()
     from Shopping import Shopping
     Shopping()
 
-def  managSupplier():
+def managSupplier():
     mw.destroy()
     from Suppliers import Suppliers 
     Suppliers()
+
+def reports():
+    mw.destroy()
+    from Tries import Tries 
+    Tries()
 
 #Option menu bar frame----------------------------------------------------------
 
@@ -93,53 +103,24 @@ MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
 MenuButton_barFrame = Menubutton(bar_frame, image=MB_image ,bg="#CE7710", width=30, height=30)
 MenuButton_barFrame.place(x=0, y=0)
 MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
-MenuButton_barFrame.menu.add_command(label="Configurar pa que salga el usuario", foreground="black", font=("New Times Roman", 12))
-MenuButton_barFrame.menu.add_separator()
-MenuButton_barFrame.menu.add_command(label="Gestion de ventas", foreground="white", font=("New Times Roman", 12), command=managSells)#
-MenuButton_barFrame.menu.add_command(label="Gestion de compras", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame.menu.add_command(label="Gestion de empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
-MenuButton_barFrame.menu.add_command(label="Gestion de proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
-MenuButton_barFrame.menu.add_command(label="Gestion de productos", foreground="white", font=("New Times Roman", 12), command= managProducts)
-MenuButton_barFrame.menu.add_command(label="Gestion de usuarios", foreground="white", font=("New Times Roman", 12))#
-MenuButton_barFrame["menu"]= MenuButton_barFrame.menu
+MenuButton_barFrame.menu.add_command(label="Gestion de Insumos", foreground="white", font=("New Times Roman", 12), command=managInputs)
+MenuButton_barFrame.menu.add_command(label="Gestion de Salidas", foreground="white", font=("New Times Roman", 12), command=managOutPuts)
+MenuButton_barFrame.menu.add_command(label="Gestion de Empleados", foreground="white", font=("New Times Roman", 12), command=managEmployees)
+MenuButton_barFrame.menu.add_command(label="Puestos de Empleados", foreground="white", font=("New Times Roman", 12), command=managPosition)
+MenuButton_barFrame.menu.add_command(label="Categoria de Productos", foreground="white", font=("New Times Roman", 12), command=managProductCategory)
+MenuButton_barFrame.menu.add_command(label="Gestion de Productos", foreground="white", font=("New Times Roman", 12), command=managProducts)
+MenuButton_barFrame.menu.add_command(label="Vista de Ventas", foreground="white", font=("New Times Roman", 12), command= managSells)
+MenuButton_barFrame.menu.add_command(label="Gestion de Compras", foreground="white", font=("New Times Roman", 12), command=managShopping)
+MenuButton_barFrame.menu.add_command(label="Vista de Compras", foreground="white", font=("New Times Roman", 12), command=managShoppingView)
+MenuButton_barFrame.menu.add_command(label="Gestion de Proveedores", foreground="white", font=("New Times Roman", 12), command=managSupplier)
+MenuButton_barFrame.menu.add_command(label="Reportes", foreground="white", font=("New Times Roman", 12), command=reports)
+MenuButton_barFrame["menu"]= MenuButton_barFrame.menu 
 
 #Bar_list search product------------------------------------------------
 product_list = []  # List to store retrieved products
 current_selection = StringVar()  # String variable to hold the selected product
 
-def get_products_from_db(search_text):
-  conn = get_db_connection()
-  if not conn:
-    return
-
-  products = []
-  cursor = conn.cursor()
-  try:
-    cursor.execute("SELECT nombre FROM productos WHERE nombre LIKE ?", ("%"+search_text+"%",))
-    if cursor.rowcount > 0:
-      for row in cursor:
-        products.append(row[1])
-    else:
-      print("No products found for search text:", search_text)
-  except pyodbc.Error as e:
-    print("Database error:", e)
-  finally:
-    if conn:
-      conn.close()
-
-  return products
-
-def update_product_list(event):
-  search_text = product_combobox.get()
-  product_list.clear()  # Clear previous list
-  product_list.extend(get_products_from_db(search_text))
-  product_combobox.set_values(*product_list)  # Update combobox values
-
-product_combobox = ttk.Combobox(mw, textvariable=current_selection, width=80)
-product_combobox.bind("<KeyRelease>", update_product_list)  # Bind update function to key release
-product_combobox.place(x=30, y=33)  
-
-
+ 
 #connection bd---------------------------------------------------------------------------------------------------------------------
 def get_db_connection():
     conn = pyodbc.connect('DRIVER={SQL Server};SERVER=DESKTOP-M8N9242;DATABASE=Socoffe;UID=sa;PWD=sistemas123;')
