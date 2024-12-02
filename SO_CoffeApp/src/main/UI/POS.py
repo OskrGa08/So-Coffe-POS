@@ -382,6 +382,7 @@ def addSell_DetailSell():
         conn.commit()
         messagebox.showinfo("Exito", "Venta y Detalle Venta añadidos con exito")
 
+        actualizar_existencias(id_venta)
         selected_products.clear()
         update_checkout_list()
         total_label.config(text="Total: $0.00")
@@ -390,6 +391,21 @@ def addSell_DetailSell():
         return id_venta
     except Exception as e:
         print(f"Error durante la transacción: {e}")
+    finally:
+        conn.close()
+
+def actualizar_existencias(id_venta):
+    conn = get_db_connection()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute("EXEC registrarVentaConExistencias @id_venta=?", id_venta)
+        conn.commit()
+        print("Existencias actualizadas.")
+    except Exception as e:
+        conn.rollback()
+        print(f"Error al actualizar existencias: {e}")
+        raise e
     finally:
         conn.close()
 
