@@ -444,6 +444,61 @@ def add_Content_Outputs(id_salida):
     inputs = get_inputs()
     create_inputs_buttons(inputs, inner_frame)
 
+# Entradas para búsqueda
+Label(mw, text="Buscar por ID:", bg="white", font=("Arial", 10)).place(x=50, y=480)
+entry_id = Entry(mw, width=20)
+entry_id.place(x=150, y=480)
+
+Label(mw, text="Buscar por Fecha:", bg="white", font=("Arial", 10)).place(x=50, y=520)
+entry_fecha = Entry(mw, width=20)
+entry_fecha.place(x=150, y=520)
+
+# Botón para buscar por ID
+def search_by_id():
+    salida_id = entry_id.get().strip()
+    if not salida_id.isdigit():
+        messagebox.showerror("Error", "Por favor ingrese un ID válido.")
+        return
+
+    try:
+        product_tree.delete(*product_tree.get_children())
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("EXEC buscarSalidasID ?", salida_id)
+        rows = cursor.fetchall()
+        for row in rows:
+            formatted_row = (row[0], f"{row[1]}")
+            product_tree.insert("", "end", values=formatted_row)
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al buscar por ID: {e}")
+
+Button(mw, text="Buscar", bg="#CE7710", fg="black", command=search_by_id).place(x=330, y=480)
+
+# Botón para buscar por Fecha
+def search_by_date():
+    fecha = entry_fecha.get().strip()
+    if not fecha:
+        messagebox.showerror("Error", "Por favor ingrese una fecha válida en formato YYYY-MM-DD.")
+        return
+
+    try:
+        product_tree.delete(*product_tree.get_children())
+        conn = get_db_connection()
+        cursor = conn.cursor()
+        cursor.execute("EXEC buscarSalidasFecha ?", fecha)
+        rows = cursor.fetchall()
+        for row in rows:
+            formatted_row = (row[0], f"{row[1]}")
+            product_tree.insert("", "end", values=formatted_row)
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al buscar por fecha: {e}")
+
+Button(mw, text="Buscar", bg="#CE7710", fg="black", command=search_by_date).place(x=330, y=520)
+
 
 Add_Output = Button(mw, text="Agregar Nueva Salida", fg="black", bg="#CE7710", command=Add_Output, font=("Arial Black", 9))
 Add_Output.place(x=50, y=120)

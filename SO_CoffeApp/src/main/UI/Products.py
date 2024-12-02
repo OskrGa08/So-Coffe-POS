@@ -747,7 +747,51 @@ def active_Product():
     except Exception as e:
         messagebox.showerror("Error", f"Error al marcar el producto como activo: {e}")
 
+def search_Products():
+    query = search_entry.get().strip()  # Captura y limpia el texto ingresado
+    if not query:  # Si la entrada está vacía, carga todos los productos
+        load_products()
+        return
 
+    try:
+        product_tree.delete(*product_tree.get_children())  # Limpia los datos actuales del Treeview
+        conn = get_db_connection()  # Conecta a la base de datos
+        cursor = conn.cursor()
+
+       # Determinar el tipo de búsqueda y ejecutar el procedimiento almacenado correspondiente
+        if query.isdigit():  # Búsqueda por ID (si decides implementarlo más adelante)
+            cursor.execute("EXEC BuscarProductosCategoria ?", query)
+        else:
+            cursor.execute("EXEC BuscarProductosNombre ?", query)
+            
+        
+
+        rows = cursor.fetchall()
+        if not rows:
+            messagebox.showinfo("Sin resultados", "No se encontraron productos que coincidan con el criterio de búsqueda.")
+        else:
+            for row in rows:
+                # Ajusta el formato según las columnas del Treeview
+                formatted_row = (
+                    row[2], #Categoria
+                    row[0], #Nombre
+                    row[1], #Descripcion
+                    row[3] #Costo
+                    # f"{row[4]}" #Existencia
+                )
+
+            product_tree.insert("", "end", values=formatted_row)
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al buscar productos: {e}")
+
+# Barra de búsqueda
+search_entry = Entry(rgp, width=30)
+search_entry.place(x=70, y=40)
+
+search_button = Button(rgp, text="Buscar", command=search_Products)
+search_button.place(x=20, y=40)
 # Variable para la casilla de verificación
 show_inactives_var = BooleanVar()
 

@@ -136,6 +136,40 @@ def load_Sells():
         messagebox.showerror("Error", f"Error al cargar las ventas: {e}")
 load_Sells()
 
+# Función para buscar ventas
+def search_Sells():
+    query = search_entry.get().strip()
+    if not query:
+        load_Sells()
+        return
+
+    try:
+        sells_tree.delete(*sells_tree.get_children())
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        # Determinar el tipo de búsqueda y ejecutar el procedimiento almacenado
+        if query.isdigit():  # Búsqueda por ID
+            cursor.execute("EXEC buscarVentasID ?", query)
+        elif query.replace("-", "").isdigit():  # Búsqueda por fecha
+            cursor.execute("EXEC buscarVentasFecha ?", query)
+        else:  # Búsqueda por nombre de empleado
+            cursor.execute("EXEC buscarVentasEmpleado ?", query)
+
+        rows = cursor.fetchall()
+        if not rows:
+            messagebox.showinfo("Sin resultados", "No se encontraron ventas que coincidan con el criterio de búsqueda.")
+        else:
+            for row in rows:
+                formatted_row = (row[0], row[1], row[2], row[3], f"{row[4]}")
+                sells_tree.insert("", "end", values=formatted_row)
+
+        cursor.close()
+        conn.close()
+    except Exception as e:
+        messagebox.showerror("Error", f"Error al buscar ventas: {e}")
+
+
 def on_select_output(event):
     # Obtener el ID de la salida seleccionada
     selected_item = sells_tree.selection()
@@ -169,6 +203,14 @@ def on_select_output(event):
         conn.close()
     except Exception as e:
         messagebox.showerror("Error", f"Error al cargar los detalles de la venta: {e}")
+
+# Barra de búsqueda
+search_entry = Entry(sells, width=40)
+search_entry.place(x=80, y=115)
+search_button = Button(sells, text="Buscar", command=search_Sells)
+search_button.place(x=15, y=110)
+
+load_Sells()
 
 # Vincular el evento de selección al treeview
 sells_tree.bind("<<TreeviewSelect>>", on_select_output)

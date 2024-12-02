@@ -142,6 +142,40 @@ def load_Sh():
         messagebox.showerror("Error", f"Error al cargar las compras: {e}")
 load_Sh()
 
+def search_Shops():
+    query = search_entry.get().strip()  # Aquí se corrigió el error
+    if not query: 
+        load_Sh()
+        return
+
+    try: 
+        sh_tree.delete(*sh_tree.get_children())
+        conn = get_db_connection()
+        cursor = conn.cursor()
+
+        if query.isdigit():
+            cursor.execute("EXEC buscarComprasID ?", query)
+        elif query.replace("-", "").isdigit():
+            cursor.execute("EXEC buscarComprasFecha ?", query)
+        else: 
+            cursor.execute("EXEC buscarComprasProveedor ?", query)
+        rows = cursor.fetchall()
+        if not rows: 
+            messagebox.showinfo("Sin resultados", "No se encontraron compras que coincidan con el criterio de búsqueda.")
+        else: 
+            for row in rows: 
+                formatted_row = (
+                    row[0], 
+                    row[1],
+                    row[2],
+                    f"{row[3]}")
+                sh_tree.insert("", "end", values=formatted_row)
+        cursor.close()
+        conn.close()
+    except Exception as e: 
+        messagebox.showerror("Error", f"Error al buscar compras: {e}")
+
+
 def on_select_output(event):
     # Obtener el ID de la salida seleccionada
     selected_item = sh_tree.selection()
@@ -176,6 +210,12 @@ def on_select_output(event):
     except Exception as e:
         messagebox.showerror("Error", f"Error al cargar los detalles de la compra: {e}")
 
+search_entry = Entry(sh, width=40)
+search_entry.place(x=80, y=115)
+search_button = Button(sh, text="Buscar", command=search_Shops)
+search_button.place(x=15, y=110)
+
+load_Sh()
 # Vincular el evento de selección al treeview
 sh_tree.bind("<<TreeviewSelect>>", on_select_output)
 
