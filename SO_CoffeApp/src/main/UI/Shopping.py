@@ -185,10 +185,10 @@ def create_product_buttons(products, inner_frame):
 def on_product_click(id_producto, product_name, product_description, product_price, tipo):
     print(f"Producto seleccionado: {id_producto} -  {product_name} - Precio: ${product_price:.2f} - Descripción: {product_description}")  # Replace with your desired action
 
-    #Agregar cantidad del producto 
+    # Agregar cantidad del producto 
     popup = Toplevel()
     popup.title("Cantidad")
-    popup.geometry("300x150")
+    popup.geometry("300x200")
 
     Label_Cantidad = Label(popup, text="Cantidad") 
     Label_Cantidad.pack(pady=5)
@@ -196,10 +196,16 @@ def on_product_click(id_producto, product_name, product_description, product_pri
     entry_cantidad = Entry(popup)
     entry_cantidad.pack(pady=5)
     entry_cantidad.insert(0, "1")  # Valor predeterminado para cantidad
-    
+
+    Label_Precio = Label(popup, text="Costo")
+    Label_Precio.pack(pady=5)
+
+    entry_costo = Entry(popup)
+    entry_costo.pack(pady=5)
+    entry_costo.insert(0, product_price)
 
     # Confirmar selección de cantidad
-    def confirmar_seleccion():
+    def confirmar_seleccion(product_price):  # Asegurarse de pasar el parámetro product_price
         cantidad = entry_cantidad.get()
         try:
             cantidad = int(cantidad)
@@ -207,6 +213,7 @@ def on_product_click(id_producto, product_name, product_description, product_pri
             print("Por favor, ingresa una cantidad válida.")
             return
         
+        # Calcular el importe
         importe = Decimal(product_price) * Decimal(cantidad)  # Asegura que importe sea Decimal
         selected_products.append({
             "id_producto": id_producto,
@@ -217,16 +224,55 @@ def on_product_click(id_producto, product_name, product_description, product_pri
             "tipo": tipo  
         })
 
+        # Obtener el nuevo costo desde el campo de entrada
+        new_cost = entry_costo.get()
 
-        # Actualizar el total usando floats
-        global total_price
-        total_price += float(importe)
-        total_label.config(text=f"Total: ${total_price:.2f}")
+        try:
+            # Asegurarse de que el costo ingresado sea un número válido
+            new_cost = float(new_cost)
+        except ValueError:
+            print("El costo ingresado no es válido.")
+            return  # Salir si el costo no es un número válido
+
+        # Solo actualizar si el costo ha cambiado
+        if new_cost != product_price:
+            # Conectar a la base de datos y actualizar el costo
+            conn = get_db_connection()
+            cursor = conn.cursor()
+
+            try:
+                if tipo == 1:  # Producto empaquetado
+                    cursor.execute("UPDATE productos SET costo = ? WHERE id_producto = ?", new_cost, id_producto)
+                else:  # Insumo
+                    cursor.execute("UPDATE insumos SET costo = ? WHERE id_producto = ?", new_cost, id_producto)
+
+                # Confirmar la transacción
+                conn.commit()
+                print(f"Precio actualizado en la base de datos a: ${new_cost:.2f}")
+            except Exception as e:
+                print(f"Error al actualizar el precio: {e}")
+            finally:
+                cursor.close()
+                conn.close()
+
+            # Actualizar el precio en la lista `selected_products`
+            for product in selected_products:
+                if product["id_producto"] == id_producto:
+                    product["costo"] = new_cost
+                    product["importe"] = new_cost * product["cantidad"]
+            
+            # Actualizar el total utilizando el nuevo costo
+            global total_price
+            total_price = sum(product['importe'] for product in selected_products)  # Recalcular total
+            total_label.config(text=f"Total: ${total_price:.2f}")
 
         popup.destroy()
-        update_checkout_list()
-    btn_confirm = Button(popup, text="Añadir al carrito", command=confirmar_seleccion)
+        update_checkout_list()  # Actualizar la lista de productos en el carrito
+
+    # Botón para confirmar la selección
+    btn_confirm = Button(popup, text="Añadir al carrito", command=lambda: confirmar_seleccion(product_price))  # Pasar product_price aquí
     btn_confirm.pack(pady=10)
+
 
 #ScrollBar products_frame  --------------------------------------------------- 
 Canvas_scrollbar = Canvas(products_frame)

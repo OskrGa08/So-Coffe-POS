@@ -460,7 +460,9 @@ def toggle_inactive_employees():
 
 
 # Función para cargar empleados según el criterio de búsqueda
-def load_employees_filter(query=None):
+def load_employees_filter():
+    query = search_entry.get().strip()
+
     try:
         # Limpiar el TreeView antes de cargar los registros
         employee_tree.delete(*employee_tree.get_children())
@@ -475,15 +477,14 @@ def load_employees_filter(query=None):
                 cursor.execute("EXEC buscarEmpleadoNombre ?", query)
             elif query.isdigit():
                 cursor.execute("EXEC buscarEmpleadoApellidoP ?", query)
-            elif len(query) == 1:  # Ajuste según el tipo de búsqueda o campo
-                cursor.execute("EXEC buscarEmpleadoApellidoM ?", query)
             else:
                 cursor.execute("EXEC buscarEmpleadoPuesto ?", query)
 
             rows = cursor.fetchall()
         else:
             # Ejecutar procedimiento para cargar todos los empleados activos si no hay búsqueda
-            load_employees()
+            cursor.execute("SELECT * FROM empleado")
+            rows = cursor.fetchall()
 
         # Iterar sobre los resultados y formatear las filas para mostrar el puesto en lugar del ID
         for row in rows:
@@ -491,7 +492,7 @@ def load_employees_filter(query=None):
                 row[1],  # Nombre
                 row[2],  # Apellido Paterno
                 row[3],  # Apellido Materno
-                row[4],  # Nombre del Puesto en lugar del ID
+                row[4],  # Puesto
                 row[5],  # RFC
                 row[6],  # Domicilio
                 row[7]   # Teléfono
@@ -503,6 +504,8 @@ def load_employees_filter(query=None):
 
     except Exception as e:
         messagebox.showerror("Error", f"Error al cargar los empleados: {e}")
+
+load_employees_filter()
 
 # Función para manejar el botón de búsqueda
 def search_employees():

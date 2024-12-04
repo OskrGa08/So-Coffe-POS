@@ -409,13 +409,6 @@ def actualizar_existencias(id_venta):
     finally:
         conn.close()
 
-#Logic CancelOrder_Button-------------------------------------
-#
-#
-#
-#
-
-
 #Buttons and Labels main window
 CancelOrder_Button = Button(text="Cancelar Orden", font=("Katibeh",15), fg="red", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="red")
 CancelOrder_Button.config(bg=mw.cget('bg'))
