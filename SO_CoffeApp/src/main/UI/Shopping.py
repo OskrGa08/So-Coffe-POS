@@ -99,9 +99,9 @@ def reports():
     Tries()
 #Option menu bar frame----------------------------------------------------------
 
-MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
+MB_image1 = PhotoImage(file="SO_CoffeApp/src/main/resources/menu_bar.png")
 # Create a label to display the background image
-MenuButton_barFrame = Menubutton(bar_frame, image=MB_image ,bg="#CE7710", width=30, height=30)
+MenuButton_barFrame = Menubutton(bar_frame, image=MB_image1 ,bg="#CE7710", width=30, height=30)
 MenuButton_barFrame.place(x=0, y=0)
 MenuButton_barFrame.menu = Menu(MenuButton_barFrame, tearoff=0, bg="#CE7710")
 MenuButton_barFrame.menu.add_command(label="Gestion de Insumos", foreground="white", font=("New Times Roman", 12), command=managInputs)
@@ -312,20 +312,6 @@ checkout_list_frame.place(x=15, y=50, width=350, height=300)
 total_label = Label(checkout_frame, text="Total: $0.00", font=("Arial", 12), bg="white", fg="black")
 total_label.place(x=5, y=425)
 
-# # Función que se ejecuta cuando se selecciona un producto
-# def on_product_click(id_producto, product_name, product_description, product_price, tipo):
-#     global total_price
-
-#     # Añadir el producto a la lista de seleccionados
-#     selected_products.append({"name": product_name, "price": product_price})
-
-#     # Actualizar la lista visualmente
-#     update_checkout_list()
-
-#     # Actualizar el total
-#     total_price += product_price
-#     total_label.config(text=f"Total: ${total_price:.2f}")
-
 # Función para actualizar la lista de productos seleccionados visualmente
 def update_checkout_list():
     global total_price
@@ -484,9 +470,6 @@ def actualizar_productos_y_recargar():
     # Recargar los botones con los productos actualizados
     reload_buttons(productos_actualizados, inner_frame)
 
-# Ejemplo de cómo utilizar `actualizar_productos_y_recargar` en un evento
-
-
 
 #Buttons and Labels main window
 CancelShopping_Button = Button(text="Cancelar Compra", font=("Katibeh",15), fg="red", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="red")
@@ -498,7 +481,7 @@ HoldOrder_Button.config(bg=shp.cget('bg'))
 HoldOrder_Button.place(x=440, y=600, anchor="center", width=200)
 
 MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/reload.png")
-reload_Bt = Button(shp, image=MB_image, fg="black", bg="#CE7710", command=actualizar_productos_y_recargar, font=("Arial Black", 9))
-reload_Bt.place(x=420, y=120)
+reload_Bt = Button(bar_frame, image=MB_image, fg="black", bg="#CE7710", command=actualizar_productos_y_recargar, font=("Arial Black", 9), relief="flat")
+reload_Bt.place(x=700, y=0)
 
 shp.mainloop()
