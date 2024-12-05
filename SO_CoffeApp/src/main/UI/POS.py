@@ -257,20 +257,6 @@ checkout_list_frame.place(x=15, y=50, width=350, height=300)
 total_label = Label(checkout_frame, text="Total: $0.00", font=("Arial", 12), bg="white", fg="black")
 total_label.place(x=5, y=425)
 
-# Función que se ejecuta cuando se selecciona un producto
-def on_product_click(product_name, product_description, product_price):
-    global total_price
-
-    # Añadir el producto a la lista de seleccionados
-    selected_products.append({"name": product_name, "price": product_price})
-
-    # Actualizar la lista visualmente
-    update_checkout_list()
-
-    # Actualizar el total
-    total_price += product_price
-    total_label.config(text=f"Total: ${total_price:.2f}")
-
 # Función para actualizar la lista de productos seleccionados visualmente
 def update_checkout_list():
     global total_price
@@ -409,6 +395,56 @@ def actualizar_existencias(id_venta):
     finally:
         conn.close()
 
+# Campo de entrada para la búsqueda
+search_entry = Entry(mw, width=60)
+search_entry.place(x=90, y=35)
+
+# Función de búsqueda
+def search_products():
+    search_term = search_entry.get().strip()
+    if not search_term:
+        products = get_active_products()  # Mostrar todos los productos si la entrada está vacía
+    else:
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Intentar buscar por categoría
+            cursor.execute("EXEC BuscarProductosCategoria ?", search_term)
+            category_results = cursor.fetchall()
+            
+            if category_results:
+                products = [
+                    {"id_producto": row[0], "nombre": row[1], "Descripcion": row[2], "costo": row[3]}
+                    for row in category_results
+                ]
+            else:
+                # Si no hay resultados por categoría, buscar por nombre
+                cursor.execute("EXEC BuscarProductosNombre ?", search_term)
+                name_results = cursor.fetchall()
+                products = [
+                    {"id_producto": row[0], "nombre": row[1], "Descripcion": row[2], "costo": row[3]}
+                    for row in name_results
+                ]
+        except Exception as e:
+            print(f"Error durante la búsqueda: {e}")
+            products = []
+        finally:
+            conn.close()
+
+    # Actualizar botones con los productos encontrados
+    for widget in inner_frame.winfo_children():
+        widget.destroy()
+    create_product_buttons(products, inner_frame)
+
+# Botón para realizar la búsqueda
+search_button = Button(mw, text="Buscar", command=search_products, bg="#CE7710", fg="white", font=("Arial", 7))
+search_button.place(x=30, y=32)
+
+# Configura la búsqueda automática al presionar Enter
+search_entry.bind("<Return>", lambda event: search_products())
+
+
 #Buttons and Labels main window
 CancelOrder_Button = Button(text="Cancelar Orden", font=("Katibeh",15), fg="red", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="red")
 CancelOrder_Button.config(bg=mw.cget('bg'))
@@ -417,6 +453,7 @@ CancelOrder_Button.place(x=220, y=550, anchor="center", width=200)
 HoldOrder_Button = Button(text="Completar Orden", font=("Katibeh",15), fg="green", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="green", command=addSell_DetailSell)
 HoldOrder_Button.config(bg=mw.cget('bg'))
 HoldOrder_Button.place(x=440, y=550, anchor="center", width=200)
+
 #END----------------------------
 mw.mainloop()
 
