@@ -438,7 +438,7 @@ def search_products():
     create_product_buttons(products, inner_frame)
 
 # Botón para realizar la búsqueda
-search_button = Button(mw, text="Buscar", command=search_products, bg="#CE7710", fg="white", font=("Arial", 7))
+search_button = Button(mw, text="Buscar", command=search_products, bg="#CE7710", fg="white", font=("Arial", 8))
 search_button.place(x=30, y=32)
 
 # Configura la búsqueda automática al presionar Enter

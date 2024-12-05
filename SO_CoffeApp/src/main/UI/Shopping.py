@@ -244,7 +244,8 @@ def on_product_click(id_producto, product_name, product_description, product_pri
                 if tipo == 1:  # Producto empaquetado
                     cursor.execute("UPDATE productos SET costo = ? WHERE id_producto = ?", new_cost, id_producto)
                 else:  # Insumo
-                    cursor.execute("UPDATE insumos SET costo = ? WHERE id_producto = ?", new_cost, id_producto)
+                    id_insumo = id_producto
+                    cursor.execute("UPDATE insumos SET costo = ? WHERE id_insumo = ?", new_cost, id_insumo)
 
                 # Confirmar la transacción
                 conn.commit()
@@ -470,6 +471,45 @@ def actualizar_productos_y_recargar():
     # Recargar los botones con los productos actualizados
     reload_buttons(productos_actualizados, inner_frame)
 
+# Campo de entrada para la búsqueda
+search_entry = Entry(shp, width=60)
+search_entry.place(x=90, y=35)
+
+def search_products():
+    search_term = search_entry.get().strip()
+    if not search_term:
+        products = get_inputs_products()  # Mostrar todos los productos si la entrada está vacía
+    else:
+        try:
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            # Intentar buscar por categoría
+            cursor.execute("EXEC BuscarInsumosNombre ?", search_term)
+            category_results = cursor.fetchall()
+            
+            if category_results:
+                products = [
+                    {"id_producto": row[0], "nombre": row[1], "Descripcion": row[2], "Costo": row[3], "tipo": row[4]}
+                    for row in category_results
+                ]
+        except Exception as e:
+            print(f"Error durante la búsqueda: {e}")
+            products = []
+        finally:
+            conn.close()
+
+    # Actualizar botones con los productos encontrados
+    for widget in inner_frame.winfo_children():
+        widget.destroy()
+    create_product_buttons(products, inner_frame)
+
+# Botón para realizar la búsqueda
+search_button = Button(shp, text="Buscar", command=search_products, bg="#CE7710", fg="white", font=("Arial", 8))
+search_button.place(x=30, y=32)
+
+# Configura la búsqueda automática al presionar Enter
+search_entry.bind("<Return>", lambda event: search_products())
 
 #Buttons and Labels main window
 CancelShopping_Button = Button(text="Cancelar Compra", font=("Katibeh",15), fg="red", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="red")
