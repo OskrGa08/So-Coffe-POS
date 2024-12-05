@@ -312,19 +312,19 @@ checkout_list_frame.place(x=15, y=50, width=350, height=300)
 total_label = Label(checkout_frame, text="Total: $0.00", font=("Arial", 12), bg="white", fg="black")
 total_label.place(x=5, y=425)
 
-# Función que se ejecuta cuando se selecciona un producto
-def on_product_click(product_name, product_description, product_price):
-    global total_price
+# # Función que se ejecuta cuando se selecciona un producto
+# def on_product_click(id_producto, product_name, product_description, product_price, tipo):
+#     global total_price
 
-    # Añadir el producto a la lista de seleccionados
-    selected_products.append({"name": product_name, "price": product_price})
+#     # Añadir el producto a la lista de seleccionados
+#     selected_products.append({"name": product_name, "price": product_price})
 
-    # Actualizar la lista visualmente
-    update_checkout_list()
+#     # Actualizar la lista visualmente
+#     update_checkout_list()
 
-    # Actualizar el total
-    total_price += product_price
-    total_label.config(text=f"Total: ${total_price:.2f}")
+#     # Actualizar el total
+#     total_price += product_price
+#     total_label.config(text=f"Total: ${total_price:.2f}")
 
 # Función para actualizar la lista de productos seleccionados visualmente
 def update_checkout_list():
@@ -468,6 +468,25 @@ def confirmar_compra_en_base_de_datos(id_proveedor):
     finally:
         conn.close()
 
+def reload_buttons(products, inner_frame):
+    # Limpiar el frame actual eliminando todos los widgets
+    for widget in inner_frame.winfo_children():
+        widget.destroy()
+
+    # Crear los botones nuevamente con los productos actualizados
+    create_product_buttons(products, inner_frame)
+
+# Lógica para actualizar los productos y recargar los botones
+def actualizar_productos_y_recargar():
+    # Obtener la lista actualizada de productos desde la base de datos
+    productos_actualizados = get_inputs_products()
+
+    # Recargar los botones con los productos actualizados
+    reload_buttons(productos_actualizados, inner_frame)
+
+# Ejemplo de cómo utilizar `actualizar_productos_y_recargar` en un evento
+
+
 
 #Buttons and Labels main window
 CancelShopping_Button = Button(text="Cancelar Compra", font=("Katibeh",15), fg="red", bg="SystemButtonFace", overrelief=FLAT, width=25, highlightbackground="red")
@@ -478,5 +497,8 @@ HoldOrder_Button = Button(text="Completar Compra", font=("Katibeh",15), fg="gree
 HoldOrder_Button.config(bg=shp.cget('bg'))
 HoldOrder_Button.place(x=440, y=600, anchor="center", width=200)
 
+MB_image = PhotoImage(file="SO_CoffeApp/src/main/resources/reload.png")
+reload_Bt = Button(shp, image=MB_image, fg="black", bg="#CE7710", command=actualizar_productos_y_recargar, font=("Arial Black", 9))
+reload_Bt.place(x=420, y=120)
 
 shp.mainloop()
