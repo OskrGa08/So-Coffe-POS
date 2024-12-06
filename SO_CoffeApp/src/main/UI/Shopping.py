@@ -205,7 +205,7 @@ def on_product_click(id_producto, product_name, product_description, product_pri
     entry_costo.insert(0, product_price)
 
     # Confirmar selección de cantidad
-    def confirmar_seleccion(product_price):  # Asegurarse de pasar el parámetro product_price
+    def confirmar_seleccion(product_price):  
         cantidad = entry_cantidad.get()
         try:
             cantidad = int(cantidad)
@@ -214,61 +214,28 @@ def on_product_click(id_producto, product_name, product_description, product_pri
             return
         
         # Calcular el importe
-        importe = Decimal(product_price) * Decimal(cantidad)  # Asegura que importe sea Decimal
-        selected_products.append({
-            "id_producto": id_producto,
-            "name": product_name,
-            "costo": float(product_price),
-            "cantidad": cantidad,
-            "importe": float(importe),
-            "tipo": tipo  
-        })
-
+        importe = Decimal(product_price) * Decimal(cantidad)
+        
         # Obtener el nuevo costo desde el campo de entrada
         new_cost = entry_costo.get()
-
         try:
-            # Asegurarse de que el costo ingresado sea un número válido
             new_cost = float(new_cost)
         except ValueError:
             print("El costo ingresado no es válido.")
-            return  # Salir si el costo no es un número válido
+            return
 
-        # Solo actualizar si el costo ha cambiado
-        if new_cost != product_price:
-            # Conectar a la base de datos y actualizar el costo
-            conn = get_db_connection()
-            cursor = conn.cursor()
-
-            try:
-                if tipo == 1:  # Producto empaquetado
-                    cursor.execute("UPDATE productos SET costo = ? WHERE id_producto = ?", new_cost, id_producto)
-                else:  # Insumo
-                    id_insumo = id_producto
-                    cursor.execute("UPDATE insumos SET costo = ? WHERE id_insumo = ?", new_cost, id_insumo)
-
-                # Confirmar la transacción
-                conn.commit()
-                print(f"Precio actualizado en la base de datos a: ${new_cost:.2f}")
-            except Exception as e:
-                print(f"Error al actualizar el precio: {e}")
-            finally:
-                cursor.close()
-                conn.close()
-
-            # Actualizar el precio en la lista `selected_products`
-            for product in selected_products:
-                if product["id_producto"] == id_producto:
-                    product["costo"] = new_cost
-                    product["importe"] = new_cost * product["cantidad"]
-            
-            # Actualizar el total utilizando el nuevo costo
-            global total_price
-            total_price = sum(product['importe'] for product in selected_products)  # Recalcular total
-            total_label.config(text=f"Total: ${total_price:.2f}")
+        # Actualizar datos en el array localmente
+        selected_products.append({
+            "id_producto": id_producto,
+            "name": product_name,
+            "costo": new_cost,  # Usar el costo actualizado
+            "cantidad": cantidad,
+            "importe": new_cost * cantidad,
+            "tipo": tipo  
+        })
 
         popup.destroy()
-        update_checkout_list()  # Actualizar la lista de productos en el carrito
+        update_checkout_list()  # Actualizar la lista visualmente
 
     # Botón para confirmar la selección
     btn_confirm = Button(popup, text="Añadir al carrito", command=lambda: confirmar_seleccion(product_price))  # Pasar product_price aquí
@@ -317,6 +284,7 @@ total_label.place(x=5, y=425)
 def update_checkout_list():
     global total_price
     total_price = sum(product['importe'] for product in selected_products)  # Recalcular total
+
     for widget in checkout_list_frame.winfo_children():
         widget.destroy()
 
@@ -330,11 +298,12 @@ def update_checkout_list():
 
         modify_button = Button(checkout_list_frame, text="Modificar", command=lambda idx=index: modify_quantity(idx))
         modify_button.grid(row=index, column=1, padx=5, pady=3)
-        
+
         delete_button = Button(checkout_list_frame, text="Eliminar", command=lambda idx=index: delete_product(idx))
         delete_button.grid(row=index, column=2, padx=5, pady=3)
 
     total_label.config(text=f"Total: ${total_price:.2f}")
+
 
 
 # Función para modificar la cantidad de un producto
@@ -401,19 +370,36 @@ def confirmar_compra():
         messagebox.showwarning("Carrito vacío", "No hay productos en el carrito.")
         return
     if not id_proveedor:
-        messagebox.showwarning("Falta ID Proveedor", "Debe ingresar un ID de proveedor.")
+        messagebox.showwarning("Falta ID Proveedor", "Debe seleccionar un proveedor.")
         return
+
     try:
         # Guardar la compra en la base de datos
         id_compra = confirmar_compra_en_base_de_datos(id_proveedor)
         
-        # Actualizar existencias de productos e insumos
+        # Actualizar costos y existencias en la base de datos después de confirmar la compra
         if id_compra is not None:
-            messagebox.showinfo("Compra confirmada", "La compra ha sido registrada y las existencias actualizadas.")
+            conn = get_db_connection()
+            cursor = conn.cursor()
+            
+            for product in selected_products:
+                if product["tipo"] == 1:  # Producto empaquetado
+                    cursor.execute("UPDATE productos SET costo = ? WHERE id_producto = ?", 
+                                   product["costo"], product["id_producto"])
+                else:  # Insumo
+                    cursor.execute("UPDATE insumos SET costo = ? WHERE id_insumo = ?", 
+                                   product["costo"], product["id_producto"])
+
+            conn.commit()
+            conn.close()
+
+            # Limpiar el carrito después de confirmar
             selected_products.clear()
             update_checkout_list()
+            messagebox.showinfo("Compra confirmada", "La compra ha sido registrada y los costos actualizados.")
     except Exception as e:
         messagebox.showerror("Error", f"Error al confirmar la compra: {e}")
+
 
 # Función para guardar la compra y detalles en la base de datos
 def confirmar_compra_en_base_de_datos(id_proveedor):
@@ -525,3 +511,4 @@ reload_Bt = Button(bar_frame, image=MB_image, fg="black", bg="#CE7710", command=
 reload_Bt.place(x=700, y=0)
 
 shp.mainloop()
+#modificar para que solo se actualice el array y en base de datos solo cuando se confirme
