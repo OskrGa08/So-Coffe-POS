@@ -107,7 +107,7 @@ Main_Label = Label(remp, text="EMPLEADOS", fg="black", bg="white", font=("Arial 
 Main_Label.place(x=645, y=45)
 
 # Table to display products
-employee_columns = ("Nombre", "Apellido Paterno", "Apellido Materno", "Puesto", "RFC", "Domicilio", "Telefono")
+employee_columns = ("Puesto", "Nombre", "Apellido Paterno", "Apellido Materno", "RFC", "Domicilio", "Telefono")
 employee_tree = ttk.Treeview(remp, columns=employee_columns, show="headings", height=5)
 
 for col in employee_columns:
@@ -135,14 +135,15 @@ def load_employees():
         rows = cursor.fetchall()
         # Concatenate names directly in the loop for efficiency
         for row in rows:
-            formatted_row = ( 
-                row[2], 
-                row[3],
-                row[4], 
-                row[1],
-                row[5],
-                row[6],
-                row[7])
+            formatted_row = (
+                row[1],  # Puesto
+                row[2],  # Nombre
+                row[3],  # Apellido Paterno
+                row[4],  # Apellido Materno
+                row[5],  # RFC
+                row[6],  # Domicilio
+                row[7]   # Teléfono
+            )
             employee_tree.insert("", "end", values=formatted_row)
         cursor.close()
         conn.close()
@@ -323,7 +324,7 @@ def Edit_EmployeeWindow():
     Position_Label.place(x=30, y=30)
     position_combobox = ttk.Combobox(ee, state="readonly", width=30)
     position_combobox.place(x=155, y=35)
-    position_combobox.set(values[3])
+    position_combobox.set(values[0])
 
     # Cargar puestos con ID en el ComboBox
     def load_positions_combobox():
@@ -350,19 +351,19 @@ def Edit_EmployeeWindow():
     Name_Label.place(x=30, y=75)
     Name_Box = Entry(ee, width=20, bg="lightgray" )
     Name_Box.place(x=155, y=75)
-    Name_Box.insert(0, values[0])
+    Name_Box.insert(0, values[1])
 
     P_LastName_Label = Label(ee, text="Apellido Paterno", fg="black", bg="white", font=("Arial Black", 9))
     P_LastName_Label.place(x=30, y=115)
     P_LastName_Box = Entry(ee, width=20, bg="lightgray")
     P_LastName_Box.place(x=155, y=115)
-    P_LastName_Box.insert(0, values[1])
+    P_LastName_Box.insert(0, values[2])
 
     M_LName_Label = Label(ee, text="Apellido Materno", fg="black", bg="white", font=("Arial Black", 9))
     M_LName_Label.place(x=30, y=155)
     M_LName_Box = Entry(ee, width=20, bg="lightgray" )
     M_LName_Box.place(x=155, y=155)
-    M_LName_Box.insert(0, values[2])
+    M_LName_Box.insert(0, values[3])
 
     RFC_Label = Label(ee, text="RFC", fg="black", bg="white", font=("Arial Black", 9))
     RFC_Label.place(x=30, y=200)
@@ -435,14 +436,15 @@ def load_employeeInactive():
         rows = cursor.fetchall()
         # Concatenate names directly in the loop for efficiency
         for row in rows:
-            formatted_row = ( 
-                row[2], 
-                row[3],
-                row[4], 
-                row[1],
-                row[5],
-                row[6],
-                row[7])
+            formatted_row = (
+                row[1],  # Nombre
+                row[2],  # Apellido Paterno
+                row[3],  # Apellido Materno
+                row[4],  # Puesto
+                row[5],  # RFC
+                row[6],  # Domicilio
+                row[7]   # Teléfono
+            )
             employee_tree.insert("", "end", values=formatted_row)
         cursor.close()
         conn.close()
@@ -458,6 +460,9 @@ def toggle_inactive_employees():
         Active_Emplooyee.place_forget()
         load_employees()  # Cargar empleados activos
 
+# Barra de búsqueda
+search_entry = Entry(remp, width=30)
+search_entry.place(x=70, y=40)
 
 # Función para cargar empleados según el criterio de búsqueda
 def load_employees_filter():
@@ -546,9 +551,7 @@ def active_Employee():
         messagebox.showerror("Error", f"Error al marcar el empleado como activo: {e}")
 
 #Buttons----------------------------------
-# Barra de búsqueda
-search_entry = Entry(remp, width=30)
-search_entry.place(x=70, y=40)
+
 
 search_button = Button(remp, text="Buscar", command=search_employees)
 search_button.place(x=20, y=40)
